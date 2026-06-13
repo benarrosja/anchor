@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Log In{% endblock %}
+
+{% block content %}
+<div class="container mt-5" style="max-width: 420px;">
+    <div class="text-center mb-4">
+        <h1 class="fw-bold">⚓ Anchor</h1>
+        <p class="text-muted">Log in to your account</p>
+    </div>
+
+    {% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST">
+        <div class="mb-3">
+            <label class="form-label fw-semibold">Email address</label>
+            <input type="email" name="email" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label fw-semibold">Password</label>
+            <input type="password" name="password" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-dark w-100 py-2">Log in</button>
+    </form>
+
+    <p class="text-center mt-3 text-muted">
+        No account yet? <a href="/register">Register</a>
+    </p>
+</div>
+{% endblock %}
