@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Add Task{% endblock %}
+
+{% block content %}
+<div class="container mt-5" style="max-width: 600px;">
+    <h2 class="fw-bold mb-4">
+        {% if task%} Edit task{% else %}Add a task{% endif %}
+    </h2>
+    <input type="text" name="title" class="form-control"
+        value="{{ task.title if task else ''}}" required>
+    <input type="date" name="deadline" class="form-control"
+        value="{{ task.deadline if task and task.deadline else ''}}">
+    <select name="priority" class="form-select" required> 
+        {% for value, label in [1,'1-Low'],(2,'2-Medium'), (3,'3- High') %}
+            <option value="{{ value }}" 
+                {% if task and task.priority == value %} selected{% elif not task and value == 2 %} selected{% endif %}>
+                {{ label }}
+            </option>
+        {% endfor %} 
+    </select>
+    <input type="number" name="estimate_mins" class="form-control" min="1"
+        value="{{ task.estimate_mins if task else 25 }}" required>
+
+    <form method="POST">
+        <div class="mb-3">
+            <label class="form-label fw-semibold">Task title</label>
+            <input type="text" name="title" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-semibold">Deadline</label>
+            <input type="date" name="deadline" class="form-control">
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-semibold">Priority</label>
+            <select name="priority" class="form-select" required>
+                <option value="1">1 - Low</option>
+                <option value="2" selected>2 - Medium</option>
+                <option value="3">3 - High</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-semibold">Estimated minutes</label>
+            <input type="number" name="estimate_mins" class="form-control" min="1" value="25" required>
+        </div>
+
+        <button type="submit" class="btn btn-dark">Save task</button>
+        <a href="/dashboard" class="btn btn-outline-secondary ms-2">Cancel</a>
+    </form>
+</div>
+{% endblock %}

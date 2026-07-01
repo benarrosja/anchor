@@ -4,7 +4,7 @@ from functools import wraps
 import os
 from dotenv import load_dotenv
 from db import get_connection
-
+from priority import compute_priority_score 
 # Load secrets pass variables from .env
 load_dotenv()
 
@@ -23,8 +23,10 @@ def login_required(f): # Put @login_required above any route that needs a logged
         return f(*args, **kwargs)
     return decorated_function
 
-
-# ==================Home Routes =======================
+# Funtion names: add_task, complet_taks, delete_task, edit_task, dashboard, register, login, logout
+# Routes include <int:task_id> for the task-specific actions (complete, delete, edit).
+# Each route ends by redirecting to the dashboard
+# ==================Home Route =======================
 
 @app.route("/")
 def index():
@@ -33,7 +35,7 @@ def index():
     return redirect(url_for("login"))
 
 
-# ================REGISTER=========================
+# ================REGISTER Route=========================
 
 # GET - show the registration form
 # POST - process the form, create the user, redirect to login
@@ -69,7 +71,7 @@ def register():
     return render_template("register.html")
 
 
-#=================LOGIN====================
+#=================LOGIN route ====================
 # GET - show the login form
 # POST -check credentials, create session, redirect to dashboard
 
@@ -105,14 +107,140 @@ def logout():
     session.clear()
     return redirect(url_for("login"))
 
+ #====================Add Task route============
+@app.route("/add_task", methods=["GET", "POST"])
+@login_required
+def add_task():
+    if request.method == "POST":
+        title = request.form["title"].strip()
+        deadline = request.form["deadline"] or None
+        priority = int(request.form.get("priority", 2))
+        estimate_mins = int(request.form.get("estimate_mins", 25))
+
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            INSERT INTO tasks (user_id, title, deadline, priority, estimate_mins)
+            VALUES (%s, %s, %s, %s, %s)
+            """,
+            (session["user_id"], title, deadline, priority, estimate_mins)
+        )
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return redirect(url_for("dashboard"))
+
+    return render_template("task_form.html", task=None)  # task=None indicates this is a new task, not editing an existing one)   
+
+#====================complete task route=========================
+@app.route("/tasks/<int:task_id>/complete")
+@login_required
+def complete_task(task_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        UPDATE tasks
+        SET is_complete = 1
+        WHERE id = %s AND user_id = %s
+        """,
+        (task_id, session["user_id"])
+    )
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return redirect (url_for("dashboard"))
+
+#===============Delete task route=================
+@app.route("/tasks/<int:task_id>/delete")
+@login_required
+def delete_task(task_id):
+    conn= get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        DELETE FROM tasks
+        WHERE id = %s AND user_id = %s
+        """,
+        (task_id, session["user_id"])
+    )
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return redirect(url_for("dashboard"))
+
 
 # =========DASHBOARD — protected page(requires login)=====
 
 @app.route("/dashboard")
 @login_required
 def dashboard():
-    return render_template("dashboard.html")
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
 
+    cursor.execute(
+        """
+        SELECT id, title, deadline, priority, estimate_mins, is_complete
+        FROM tasks
+        WHERE user_id = %s
+        ORDER BY id DESC
+        """,
+        (session["user_id"],)
+    )
+    tasks = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    # just pass tasks, will add scorring later 
+    return render_template("dashboard.html", tasks=tasks)
+
+# ====================TASK EDIT==========
+@app.route("/task/<int:task_id>/edit", methods=["GET", "POST"])
+@login_required
+def edit_task(task_id):
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    # Fetch the task first
+    cursor.execute(
+        """
+        SELECT id, title, deadline, priority, estimate_mins
+        FROM tasks
+        WHERE id= %s AND user_id= %s
+        """,
+        (task_id, session["user_id"])
+    )
+    task = cursor.fetchone()
+
+    if not task:
+        cursor.close()
+        conn.close()
+        return redirect(url_for("dashboard"))
+
+    if request.method == "POST":
+        title = request.form["title"].strip()
+        deadline = request.form["deadline"] or None
+        priority = int(request.form.get("priority", 2))
+        estimate_mins = int(request.form.get("estimate_mins", 25))
+
+        cursor.execute(
+            """
+            UPDATE tasks
+            SET title=%s, deadline=%s, priority=%s, estimate_mins=%s
+            WHERE id=%s AND user_id=%s
+            """,
+            (title, deadline, priority, estimate_mins, task_id, session["user_id"])
+        )
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return redirect(url_for("dashboard"))
+
+    cursor.close()
+    conn.close()
+    return render_template("task_form.html", task=task)
 
 # ==================== RUN THE APP ======================
 # debug= True means Flask shows helpful errors in the browser
