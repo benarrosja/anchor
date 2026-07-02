@@ -5,6 +5,9 @@ import os
 from dotenv import load_dotenv
 from db import get_connection
 from priority import compute_priority_score 
+from datetime import datetime
+import json
+
 # Load secrets pass variables from .env
 load_dotenv()
 
@@ -249,6 +252,32 @@ def edit_task(task_id):
     cursor.close()
     conn.close()
     return render_template("task_form.html", task=task)
+
+#==========focus Session route=========================
+
+@app.route("/focus/log", methods=["POST"])
+@login_required
+def log_focus():
+    data = request.get_json(force=True)
+    task_id = int(data.get("task_id"))
+    duration_mins = int(data.get("duration_mins"))
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        INSERT INTO focus_sessions (user_id, task_id, started_at, duration_mins, completed)
+        VALUES (%s, %s, %s, %s, %s)
+        """,
+        (session["user_id"], task_id, datetime.utcnow(), duration_mins, 1)
+    )
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return ("", 204)  # empty success response
 
 # ==================== RUN THE APP ======================
 # debug= True means Flask shows helpful errors in the browser
