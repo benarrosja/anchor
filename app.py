@@ -254,7 +254,7 @@ def edit_task(task_id):
     return render_template("task_form.html", task=task)
 
 #==========focus Session route=========================
-
+# session_date will auto-fill with today's date thanks to its default.
 @app.route("/focus/log", methods=["POST"])
 @login_required
 def log_focus():
@@ -262,15 +262,17 @@ def log_focus():
     task_id = int(data.get("task_id"))
     duration_mins = int(data.get("duration_mins"))
 
+    elapsed_secs = duration_mins * 60 # converts minutes to seconds for database storage
+
     conn = get_connection()
     cursor = conn.cursor()
 
     cursor.execute(
         """
-        INSERT INTO focus_sessions (user_id, task_id, started_at, duration_mins, completed)
-        VALUES (%s, %s, %s, %s, %s)
+        INSERT INTO focus_sessions (user_id, task_id, elapsed_secs, completed) 
+        VALUES (%s, %s, %s, %s)
         """,
-        (session["user_id"], task_id, datetime.utcnow(), duration_mins, 1)
+        (session["user_id"], task_id, elapsed_secs, 1)
     )
 
     conn.commit()
