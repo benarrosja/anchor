@@ -18,7 +18,8 @@
             <div class="list-group-item d-flex justify-content-between align-items-center">
                 <div> 
                     <div class="fw-semibold">{{ task.title }} </div>
-                    <small class="text-muted">
+                    <br>
+                    <small class="text-muted">Score: {{ '%.2f'|format(task.score) }}
                         Priority: {{ task.priority }}
                         {% if task.deadline %}
                             .Due: {{ task.deadline }}

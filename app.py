@@ -194,6 +194,14 @@ def dashboard():
     cursor.close()
     conn.close()
 
+    # adding a computed score to each task 
+    for t in tasks:
+        t["score"] = compute_priority_score(t)
+    # sort by score descending, then by id
+    tasks.sort(key=lambda t: (-t["score"], t["id"]))
+
+    return render_template("dashboard.html", tasks=tasks)
+
     # just pass tasks, will add scorring later 
     return render_template("dashboard.html", tasks=tasks)
 
