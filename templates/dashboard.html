@@ -13,8 +13,9 @@
    </div>
 
     {% if tasks %}
-    <div class="list-group">
+       <div class="list-group">
         {% for task in tasks %}
+        
             <div class="list-group-item d-flex justify-content-between align-items-center">
                 <div> 
                     <div class="fw-semibold">{{ task.title }} </div>
@@ -26,6 +27,11 @@
                     {% endif %}
                     . Est: {{ task.estimate_mins }} mins
                 </small>
+    <button
+        class="btn btn-sm btn-outline-primary ms-2"
+        onclick="startFocusTimer({{ task.id }}, {{ task.estimate_mins }})">
+        Start focus ({{ task.estimate_mins }}m)
+    </button>
             </div>
             <div>
                 {% if not task.is_complete %}
