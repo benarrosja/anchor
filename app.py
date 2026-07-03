@@ -274,6 +274,7 @@ def log_focus():
         """,
         (session["user_id"], task_id, elapsed_secs, 1)
     )
+    
 
     conn.commit()
     cursor.close()
