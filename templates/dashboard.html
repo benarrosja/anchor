@@ -11,7 +11,7 @@
    </div>
 <a href="{{ url_for('add_task') }}" class="btn btn-dark">+ Add Task</a>
    </div>
-   <!-- Adding a coloful litlle "focus stat card" xml-->
+   <!-- Adding a coloful litlle " green focus stat card" xml-->
    <div class="card border-0 shadow-sm mb-4" style="background: linear-gradient(135deg, #eef7f0,#ffffff),">
      <div class="card-body d-flex align-items-center justify-content-between">
         <div>
@@ -20,9 +20,21 @@
                 {{ total_focus_minutes }} <span style="font-size: 1rem;">minutes</span>
             </h2>
         </div>
-        <div> style="font-size: 1.5rem; color: #227d32;">FOCUS</div>
+        <div style="font-size: 1.5rem; color: #2e7d32;"> FOCUS</div>
      </div>
    </div>
+   <!-- adding display for streak calculation in the dashboard xml-->
+    <div class="card boarder-0 shadow-sm mb-4" style="background: linear-gradient (135deg, #ffffff);">
+        <div>
+            <p class="text-muted mb-1" style="font-size: 0.85rem;">CURRENT STREAK</p>
+            <h2 class="fw-bold mb-0" sytle="color: #e65100;">
+                {{ streak  }} <span style="font-size: 1rem;">day{{ 's' if streak != 1 else '' }}</span> 
+                <!-- 's' if ... is a tiny jinja trick to show 1 day(no s) but 3 days (with s) -->
+            </h2>
+        </div>
+        <div style="font-size: 1.5rem; color: #e65100;"> &#128293;</div>
+        </div>
+    </div>
 
     {% if tasks %}
        <div class="list-group">

@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from db import get_connection
 from priority import compute_priority_score 
 from datetime import datetime
+from datetime import date, timedelta
 import json
 
 # Load secrets pass variables from .env
@@ -175,7 +176,7 @@ def delete_task(task_id):
     return redirect(url_for("dashboard"))
 
 
-# =========DASHBOARD protected page(requires login)=====
+# =========DASHBOARD-Route protected page(requires login)=====
 
 @app.route("/dashboard")
 @login_required
@@ -207,9 +208,34 @@ def dashboard():
     result = cursor.fetchone() # grabs the single row answer ( there is only one, since SUM adds wvweything into one number)
     total_secs = result["total_secs"] or 0 # if no focus sesssions today, SUM returns None. this is a safety net,i.e. if user has no focus today SUM() returns null and Py crashes trying to maths on None. The "or 0" says: if empty, just treat it as 0.
     total_focus_minutes = total_secs // 60
-# Now I can close - after all queries are done
+# Query 3: get distinct days user has focused ( for streak calculaton)
+    cursor.execute(
+        """
+        SELECT DISTINCT session_date
+        FROM focus_sessions
+        WHERE user_id = %s
+        ORDER BY session_date DESC
+        """,
+        (session["user_id"],)
+
+    )
+    focus_days_rows = cursor.fetchall()
+    focus_days = [row["session_date"] for row in focus_days_rows]
+
+#Now I can close - after all queries are done
     cursor.close()
     conn.close()
+# adding the streak calculation using Python
+       
+    streak = 0 
+    expected_day = date.today()
+
+    for day in focus_days:
+        if day == expected_day:
+            streak += 1
+            expected_day = expected_day - timedelta (days=1)
+        else:
+            break
 
 # adding a computed priority score to each task 
     for t in tasks:
@@ -219,7 +245,8 @@ def dashboard():
     return render_template(
         "dashboard.html",
         tasks=tasks,
-        total_focus_minutes= total_focus_minutes
+        total_focus_minutes=total_focus_minutes,
+        streak=streak
     )
 
 
