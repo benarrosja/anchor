@@ -175,14 +175,14 @@ def delete_task(task_id):
     return redirect(url_for("dashboard"))
 
 
-# =========DASHBOARD — protected page(requires login)=====
+# =========DASHBOARD protected page(requires login)=====
 
 @app.route("/dashboard")
 @login_required
 def dashboard():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
-
+# Query 1: get tasks
     cursor.execute(
         """
         SELECT id, title, deadline, priority, estimate_mins, is_complete
@@ -194,19 +194,34 @@ def dashboard():
     )
     tasks = cursor.fetchall()
 
+# Query 2: get todya's total focus time ( before closing, e.g cursor/conn.close)
+    cursor.execute( #sends the question to MysQL to get the total time spent on focus sessions for the logged-in user
+    
+        """
+        SELECT SUM(elapsed_secs) AS total_secs
+        FROM focus_sessions
+        WHERE user_id = %s
+        """,
+        (session["user_id"],)
+    )
+    result = cursor.fetchone() # grabs the single row answer ( there is only one, since SUM adds wvweything into one number)
+    total_secs = result["total_secs"] or 0 # if no focus sesssions today, SUM returns None. this is a safety net,i.e. if user has no focus today SUM() returns null and Py crashes trying to maths on None. The "or 0" says: if empty, just treat it as 0.
+    total_focus_minutes = total_secs // 60
+# Now I can close - after all queries are done
     cursor.close()
     conn.close()
 
-    # adding a computed score to each task 
+# adding a computed priority score to each task 
     for t in tasks:
         t["score"] = compute_priority_score(t)
-    # sort by score descending, then by id
-    tasks.sort(key=lambda t: (-t["score"], t["id"]))
+    tasks.sort(key=lambda t: (-t["score"], t["id"])) # sort by score descending, then by id
 
-    return render_template("dashboard.html", tasks=tasks)
+    return render_template(
+        "dashboard.html",
+        tasks=tasks,
+        total_focus_minutes= total_focus_minutes
+    )
 
-    # just pass tasks, will add scorring later 
-    return render_template("dashboard.html", tasks=tasks)
 
 # ====================TASK EDIT==========
 @app.route("/task/<int:task_id>/edit", methods=["GET", "POST"])
