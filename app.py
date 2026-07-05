@@ -1,16 +1,19 @@
-from flask import Flask, render_template, request, redirect, url_for, session
-from werkzeug.security import generate_password_hash, check_password_hash
-from functools import wraps
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
+from google import genai
 import os
 from dotenv import load_dotenv
+
+load_dotenv() # MUST run BEFORE reading any os.getenv(...)
+print("GEMINI KEY LOADED:", bool(os.getenv("GEMINI_API_KEY")))
+gemini_client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+
+from werkzeug.security import generate_password_hash, check_password_hash
+from functools import wraps
 from db import get_connection
 from priority import compute_priority_score 
 from datetime import datetime
 from datetime import date, timedelta
 import json
-
-# Load secrets pass variables from .env
-load_dotenv()
 
 # Create the Flask app
 app = Flask(__name__)
@@ -174,7 +177,32 @@ def delete_task(task_id):
     cursor.close()
     conn.close()
     return redirect(url_for("dashboard"))
+#=============COACH GENAI ROUTE==================
 
+@app.route("/tasks/<int:task_id>/coach", methods=["POST"])
+@login_required
+def coach_tip(task_id):
+    data = request.get_json(force=True)
+    title = data.get("title", "this task")
+    deadline = data.get("deadline") or "not set deadline"
+    priority = data.get("priority", 2)
+    prompt = (
+        f"A user with ADHD feels stuck starting this task: '{title}' ."
+        f"Deadline: {deadline}.Priority level: {priority} (1=low, 3=high). "
+        "Give ONE thiny, concrete first action they could do in under 2 minutes. "
+        "keep it under 20 words. No generic advice like 'just stat' - be specific."
+    )
+    try:
+        response = gemini_client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt
+        )
+        tip = response.text.strip()
+    except Exception as e:
+        print("Gemini error:", e)
+        tip = "Open the task and write just one sentence or step. That's the whole goal for now. "
+
+    return jsonify({"tip": tip})
 
 # =========DASHBOARD-Route protected page(requires login)=====
 
