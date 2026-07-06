@@ -85,7 +85,7 @@
                         </button>
                         <button class="btn-icon-ghost"
                             onclick="getCoachTip({{ task.id }}, '{{ task.title|escape }}', '{{ task.deadline or '' }}', {{ task.priority }})">
-                            💡 I'm stuck
+                             I'm stuck!
                         </button>
                         <a href="{{ url_for('complete_task', task_id=task.id) }}" class="btn-icon-ghost ms-auto">
                             ✓ Mark done
@@ -101,7 +101,23 @@
         <p class="mt-4 text-muted">No tasks yet. Start by adding one.</p>
     {% endif %}
 
-    <!-- Focus timer panel -->
+
+    <div class="focus-timer-panel">
+        <p class="focus-task-label" id="focus-task-label"> No active focus session.</p>
+        <div class="timer-ring-wrapper">
+            <svg viewBox="0 0 200 200" class="timer-ring-svg">
+                <circle cx="100" cy="100" r="90" class="timer-ring-bg"></circle>
+                <circle cx="100" cy="100" r="90" class="timer-ring-process"
+        id="timer-ring-progress"></circle>
+            </svg>
+            <div class="timer-ring-text" id="focus-timer-display">00:00</div>
+        </div>
+        <button class="btn-cancel-focus"
+    onclick="cancelFocusTimer()">Cancel</button>
+    </div>
+
+
+    <!-- Focus timer panel 
     <div class="mt-4">
         <h4 class="fw-bold mb-2">Focus timer</h4>
         <p class="text-muted mb-1" id="focus-task-label">No active focus session.</p>
@@ -110,7 +126,7 @@
             <button class="btn btn-sm btn-secondary" onclick="cancelFocusTimer()">Cancel</button>
         </div>
     </div>
-</div>
+</div> -->
 
 <script>
     let focusInterval = null;
