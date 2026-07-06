@@ -1,17 +1,58 @@
-body {
-    background-color: #f8f9fa;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-}
+/* ===ADHD- friendly task card design === */
 
-.navbar {
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+.task-card{
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 3 px rgba(0,0,0,0.06);
+    border-left: 6px solid #cccccc;
+    transition: box-shadow 0.2s ease;
 }
-
-.btn-dark {
-    background-color: #1a1a2e;
-    border-color: #1a1a2e;
+.task-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.10);
 }
+.task-card.priority-high { border-left-color: #e53935; }
+.task-card.priority-medium { border-left-color: #f9a825; }
+.task-card.priority-low {border-left-color: #43a047; }
 
-.btn-dark:hover {
-    background-color: #16213e;
+
+.task-tile {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin-bottom: 4px
+}
+.task-meta {
+    font-size: 0.8rem;
+    color: #8a8a8a;
+    margin-bottom: 10px;
+}
+.task-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+.btn-primary-action {
+    background: #1a1a2e;
+    color: #fff;
+    border-radius: 8px;
+    padding: 6px 16px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    border: none;
+}
+.btn-primary-action:hover { background: #2d2d4a; color:#fff; }
+
+.btn-icon-ghost {
+    background: none;
+    border: none;
+    color:  #9a9a9a;
+    font-size: 0.85rem;
+    padding: 4px 8px;
+}
+.btn-icon-ghost:hover { color: #444; }
+
+.dropdown-menu-small {
+    min-width: 140px;
+    font-size: 0.85rem;
 }

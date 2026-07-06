@@ -1,4 +1,3 @@
-
 {% extends "base.html" %}
 {% block title %}Dashboard{% endblock %}
 
@@ -6,108 +5,110 @@
 <div class="container mt-5">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
-            <h2 class="fw-bold mb-1">Good to see you </h2>
-            <p class="text-muted" mb-0>Your tasks ordered here.</p>
-   </div>
-<a href="{{ url_for('add_task') }}" class="btn btn-dark">+ Add Task</a>
-   </div>
-   <!-- Adding a coloful litlle " green focus stat card" xml-->
-   <div class="card border-0 shadow-sm mb-4" style="background: linear-gradient(135deg, #eef7f0,#ffffff),">
-     <div class="card-body d-flex align-items-center justify-content-between">
-        <div>
-            <p class="text-muted mb-1" style="font-size: 0.85rem;">TODAY'S FOCUS</p>
-            <h2 class="fw-bold mb-0" style="color: #2e7d32">
-                {{ total_focus_minutes }} <span style="font-size: 1rem;">minutes</span>
-            </h2>
+            <h2 class="fw-bold mb-1">Good to see you</h2>
+            <p class="text-muted mb-0">Your tasks ordered here.</p>
         </div>
-        <div style="font-size: 1.5rem; color: #2e7d32;"> FOCUS</div>
-     </div>
-   </div>
-   <!-- adding display for streak calculation in the dashboard xml-->
-    <div class="card border-0 shadow-sm mb-4" style="background: linear-gradient(135deg, #ffffff);">
-        <div>
-            <p class="text-muted mb-1" style="font-size: 0.85rem;">CURRENT STREAK</p>
-            <h2 class="fw-bold mb-0" style="color: #e65100;">
-                {{ streak  }} <span style="font-size: 1rem;">day{{ 's' if streak != 1 else '' }}</span> 
-                <!-- 's' if ... is a tiny jinja trick to show 1 day(no s) but 3 days (with s) -->
-            </h2>
+        <a href="{{ url_for('add_task') }}" class="btn btn-dark">+ Add Task</a>
+    </div>
+
+    <!-- Stat cards: Today's Focus + Streak side by side -->
+    <div class="row g-3 mb-4">
+        <div class="col-6">
+            <div class="p-3 rounded-4" style="background: linear-gradient(135deg, #eef7f0, #ffffff);">
+                <p class="text-muted mb-1" style="font-size:0.75rem; letter-spacing:0.5px;">TODAY'S FOCUS</p>
+                <h2 class="fw-bold mb-0" style="color:#2e7d32;">
+                    {{ total_focus_minutes }}<span style="font-size:1rem;"> min</span>
+                </h2>
+            </div>
         </div>
-        <div style="font-size: 1.5rem; color: #e65100;"> &#128293;</div>
+        <div class="col-6">
+            <div class="p-3 rounded-4" style="background: linear-gradient(135deg, #fff4e5, #ffffff);">
+                <p class="text-muted mb-1" style="font-size:0.75rem; letter-spacing:0.5px;">STREAK</p>
+                <h2 class="fw-bold mb-0" style="color:#e65100;">
+                    {{ streak }} <span style="font-size:1rem;">day{{ 's' if streak != 1 else '' }}</span> &#128293;
+                </h2>
+            </div>
+        </div>
     </div>
-     <!--Adding a small pannel to show the AI's answers xml-->
-    <div id="coach-box" class="card border-0 shadow-sm mt-4" style="display:none; background:#eef3fb;">
-    <div class="card-body">
-        <p class="text-muted mb-1" style="font-size:0.85rem;">COACH SUGGESTION</p>
-        <p id="coach-text" class="mb-0 fw-semibold"></p>
+
+    <!-- Coach suggestion panel: hidden until "I'm stuck" is clicked -->
+    <div id="coach-box" class="card border-0 shadow-sm mb-4" style="display:none; background:#eef3fb; border-radius:14px;">
+        <div class="card-body">
+            <p class="text-muted mb-1" style="font-size:0.75rem; letter-spacing:0.5px;">COACH SUGGESTION</p>
+            <p id="coach-text" class="mb-0 fw-semibold"></p>
+        </div>
     </div>
-</div>
 
     {% if tasks %}
-       <div class="list-group">
+    <div class="task-list">
         {% for task in tasks %}
-         <div class="list-group-item d-flex justify-content-between align-items-center">
-          <div> 
-            <div class="fw-semibold">{{ task.title }} </div>
-            <br>
-            <small class="text-muted">
-             Score: {{ '%.2f'|format(task.score) }}
-             Priority: {{ task.priority }}
-             {% if task.deadline %}
-                . Due: {{ task.deadline }}
-             {% endif %}
-             . Est: {{ task.estimate_mins }} mins
-            </small>
-           
-            </div>
+            {% if task.priority == 3 %}
+                {% set priority_class = 'priority-high' %}
+                {% set priority_label = 'High' %}
+            {% elif task.priority == 2 %}
+                {% set priority_class = 'priority-medium' %}
+                {% set priority_label = 'Medium' %}
+            {% else %}
+                {% set priority_class = 'priority-low' %}
+                {% set priority_label = 'Low' %}
+            {% endif %}
 
-           
-            <div class="d-flex align-items-center">
-            
-            <button
-                class="btn btn-sm btn-outline-info ms-2"
-                onclick="getCoachTip({{ task.id }}, '{{ task.title|escape }}', '{{ task.deadline or '' }}', {{ task.priority }})">
-                I'm stuck
-            </button>
+            <div class="task-card {{ priority_class }} {% if task.is_complete %}opacity-50{% endif %}">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="task-title {% if task.is_complete %}text-decoration-line-through{% endif %}">
+                            {{ task.title }}
+                        </div>
+                        <div class="task-meta">
+                            {{ priority_label }}
+                            {% if task.deadline %} · Due {{ task.deadline }}{% endif %}
+                            · {{ task.estimate_mins }} min
+                        </div>
+                    </div>
 
-            <button
-              class="btn btn-sm btn-outline-primary ms-2"
-              onclick="startFocusTimer({{ task.id }}, {{ task.estimate_mins }})">
-              Start focus ({{ task.estimate_mins }}m)
-            </button>
-<!-- Adding a 'just start' button to each task --> 
-            <button
-                class="btn btn-sm btn-outline-info ms-2"
-                onclick="getCoachTip({{ task.id }}, 
-                '{{ task.title|escape}}',
-                '{{ task.deadline or ''}}',
-                {{ task.priority }}"> 
-                I'm stuck
-            </button>
+                    <!-- Overflow menu: Edit / Delete tucked away, not competing visually -->
+                    <div class="dropdown">
+                        <button class="btn-icon-ghost" data-bs-toggle="dropdown">⋯</button>
+                        <ul class="dropdown-menu dropdown-menu-small dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{{ url_for('edit_task', task_id=task.id) }}">Edit</a></li>
+                            <li><a class="dropdown-item text-danger" href="{{ url_for('delete_task', task_id=task.id) }}"
+                                   onclick="return confirm('Delete this task?');">Delete</a></li>
+                        </ul>
+                    </div>
+                </div>
 
-            <div class="ms-2">
-                {% if not task.is_complete %}
-                    <a href="{{ url_for('complete_task', task_id=task.id) }}" 
-                    class="btn btn-sm btn-outline-success">Done</a>
-                {% else %}
-                    <span class="badge bg-success">Done</span>
-                {% endif %}
-                <a href="{{ url_for('edit_task', task_id=task.id) }}" 
-                    class="btn btn-sm btn-outline-secondary ms-2">Edit</a>
-                
-                <a href="{{ url_for('delete_task', task_id=task.id) }}"
-                    class="btn btn-sm btn-outline-danger ms-2"
-                    onclick="return confirm('Delete this task?');">Delete</a>
-            </div>
-            </div>
+                <div class="task-actions mt-2">
+                    {% if not task.is_complete %}
+                        <button class="btn-primary-action"
+                            onclick="startFocusTimer({{ task.id }}, {{ task.estimate_mins }})">
+                            ▶ Start focus ({{ task.estimate_mins }}m)
+                        </button>
+                        <button class="btn-icon-ghost"
+                            onclick="getCoachTip({{ task.id }}, '{{ task.title|escape }}', '{{ task.deadline or '' }}', {{ task.priority }})">
+                            💡 I'm stuck
+                        </button>
+                        <a href="{{ url_for('complete_task', task_id=task.id) }}" class="btn-icon-ghost ms-auto">
+                            ✓ Mark done
+                        </a>
+                    {% else %}
+                        <span class="badge bg-success">Completed</span>
+                    {% endif %}
+                </div>
             </div>
         {% endfor %}
-        </div>
+    </div>
+    {% else %}
+        <p class="mt-4 text-muted">No tasks yet. Start by adding one.</p>
+    {% endif %}
+
+    <!-- Focus timer panel -->
     <div class="mt-4">
-    <h4 class="fw-bold mb-2">Focus timer</h4>
-    <p class="text-muted mb-1" id="focus-task-label">No active focus session.</p>
-    <div id="focus-timer-display" class="fs-3 fw-bold">00:00</div>
-    <div class="mt-2">
-        <button class="btn btn-sm btn-secondary" onclick="cancelFocusTimer()">Cancel</button>
+        <h4 class="fw-bold mb-2">Focus timer</h4>
+        <p class="text-muted mb-1" id="focus-task-label">No active focus session.</p>
+        <div id="focus-timer-display" class="fs-3 fw-bold">00:00</div>
+        <div class="mt-2">
+            <button class="btn btn-sm btn-secondary" onclick="cancelFocusTimer()">Cancel</button>
+        </div>
     </div>
 </div>
 
@@ -123,9 +124,7 @@
     }
 
     function startFocusTimer(taskId, estimateMins) {
-        if (focusInterval) {
-            clearInterval(focusInterval);
-        }
+        if (focusInterval) { clearInterval(focusInterval); }
 
         focusTaskId = taskId;
         focusRemainingSeconds = estimateMins * 60;
@@ -145,79 +144,57 @@
                 focusInterval = null;
                 document.getElementById('focus-task-label').textContent =
                     'Focus session finished! Logging…';
-
                 logFocusSession(taskId, estimateMins);
             }
         }, 1000);
     }
 
     function cancelFocusTimer() {
-        if (focusInterval) {
-            clearInterval(focusInterval);
-            focusInterval = null;
-        }
+        if (focusInterval) { clearInterval(focusInterval); focusInterval = null; }
         focusTaskId = null;
         focusRemainingSeconds = 0;
-        document.getElementById('focus-task-label').textContent =
-            'No active focus session.';
+        document.getElementById('focus-task-label').textContent = 'No active focus session.';
         document.getElementById('focus-timer-display').textContent = '00:00';
     }
 
     function logFocusSession(taskId, estimateMins) {
         fetch('/focus/log', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '' // we’ll ignore CSRF for now in this small project
-            },
-            body: JSON.stringify({
-                task_id: taskId,
-                duration_mins: estimateMins
-            })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ task_id: taskId, duration_mins: estimateMins })
         }).then(function (response) {
             if (response.ok) {
-                document.getElementById('focus-task-label').textContent =
-                    'Focus session logged!';
+                document.getElementById('focus-task-label').textContent = 'Focus session logged!';
             } else {
-                document.getElementById('focus-task-label').textContent =
-                    'Could not log session (server error).';
+                document.getElementById('focus-task-label').textContent = 'Could not log session (server error).';
             }
         }).catch(function () {
-            document.getElementById('focus-task-label').textContent =
-                'Could not log session (network error).';
+            document.getElementById('focus-task-label').textContent = 'Could not log session (network error).';
         });
     }
 
-    <!-- JavaScript fuction main script section not per-task -->
-function getCoachTip(taskId, title, deadline, priority) {
-    const box = document.getElementById('coach-box');
-    const text = document.getElementById('coach-text');
+    function getCoachTip(taskId, title, deadline, priority) {
+        const box = document.getElementById('coach-box');
+        const text = document.getElementById('coach-text');
 
-    box.style.display = 'block';
-    text.textContent = 'Thinking...';
+        box.style.display = 'block';
+        text.textContent = 'Thinking...';
 
-    fetch('/tasks/' + taskId + '/coach', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: title, deadline: deadline, priority: priority })
-    })
-    .then(function(response) {
-        if (!response.ok) { throw new Error('Server error'); }
-        return response.json();
-    })
-    .then(function(data) {
-        text.textContent = data.tip;
-    })
-    .catch(function() {
-        text.textContent = "Start with just 2 minutes on this task. That's enough for now.";
-    });
-}
-
+        fetch('/tasks/' + taskId + '/coach', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title: title, deadline: deadline, priority: priority })
+        })
+        .then(function(response) {
+            if (!response.ok) { throw new Error('Server error'); }
+            return response.json();
+        })
+        .then(function(data) {
+            text.textContent = data.tip;
+        })
+        .catch(function() {
+            text.textContent = "Start with just 2 minutes on this task. That's enough for now.";
+        });
+    }
 </script>
-            </div>
-    </div>
-    {% else %}
-        <p class="mt-4 text-muted">No tasks yet. Start by adding one. </p>
-    {% endif %}
-</div>
 {% endblock %}
