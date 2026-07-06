@@ -132,32 +132,71 @@
     let focusInterval = null;
     let focusRemainingSeconds = 0;
     let focusTaskId = null;
+    
+    const RING_CIRCUMFERENCE = 565.48; // 2* rad * 90, matches the SVG radius
 
     function formatTime(seconds) {
         const m = Math.floor(seconds / 60);
         const s = seconds % 60;
         return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
     }
+    function playChime() {
+        // web Audio API: genereates a soft two-tone chime, no external audio file needed
+        const ctx = new (window.AudioContext || window.webkitAudioContext) ();
+        const now = ctx.currentTime;
+        [523.25, 659.25].forEach(function (freq, i) {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.frequency.value = freq;
+            osc.type = 'sine';
+            gain.gain. setValueAtTime(0.0001, now +i * 0.35);
+            gain.gain.exponentialRampToValueAtTime(0.15, now + i * 0.35 + 0.05);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.35 + 1.2);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + i + 0.35);
+            osc.stop(now + i +0.35 +1.3);      
+        });
+    }
+
+    function updateRingVisual() {
+        const ring = document.getElementById( 'timer-ring-progresss');
+        const fractionRemaning = focusRemainingSeconds / focusTotalSeconds;
+        const offset = RING_CIRCUMFERENCE *(1 - fractionRemaning);
+
+        ring.style.strokeDashoffset = offset;
+
+        ring.classList.remove('warning', 'danger');
+        if (fractionRemaning <= 0.10) {
+            ring.classList.add('danger');
+        } else if (fractionRemaning <=0.30) {
+            ring.classList.add('warning');
+        }
+    }
 
     function startFocusTimer(taskId, estimateMins) {
         if (focusInterval) { clearInterval(focusInterval); }
 
         focusTaskId = taskId;
-        focusRemainingSeconds = estimateMins * 60;
+        focusTotalSeconds = estimateMins * 60
+        focusRemainingSeconds = focusTotalSeconds;
 
         document.getElementById('focus-task-label').textContent =
             'Focusing on task #' + taskId + ' for ' + estimateMins + ' minutes.';
         document.getElementById('focus-timer-display').textContent =
-            formatTime(focusRemainingSeconds);
+    formatTime(focusRemainingSeconds);
+        updateRingVisual();
 
         focusInterval = setInterval(function () {
             focusRemainingSeconds -= 1;
             document.getElementById('focus-timer-display').textContent =
-                formatTime(focusRemainingSeconds);
+    formatTime(focusRemainingSeconds);
+            updateRingVisual();
 
             if (focusRemainingSeconds <= 0) {
                 clearInterval(focusInterval);
                 focusInterval = null;
+                playchime()
                 document.getElementById('focus-task-label').textContent =
                     'Focus session finished! Logging…';
                 logFocusSession(taskId, estimateMins);
@@ -171,6 +210,8 @@
         focusRemainingSeconds = 0;
         document.getElementById('focus-task-label').textContent = 'No active focus session.';
         document.getElementById('focus-timer-display').textContent = '00:00';
+        document.getElementById(timer-ring-progress).style.strokeDashoffset = 0;
+        document.getElementById('timer-ring-progress').classList.remove('warning', 'danger');
     }
 
     function logFocusSession(taskId, estimateMins) {
@@ -179,12 +220,9 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ task_id: taskId, duration_mins: estimateMins })
         }).then(function (response) {
-            if (response.ok) {
-                document.getElementById('focus-task-label').textContent = 'Focus session logged!';
-            } else {
-                document.getElementById('focus-task-label').textContent = 'Could not log session (server error).';
-            }
-        }).catch(function () {
+            document.getElementById('focus-task-label').textContent = 
+            response.ok? 'Focus session logged!': 'Could not log session( server error).';
+                }).catch(function () {
             document.getElementById('focus-task-label').textContent = 'Could not log session (network error).';
         });
     }
