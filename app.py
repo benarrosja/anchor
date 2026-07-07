@@ -144,6 +144,28 @@ def add_task():
 
     return render_template("task_form.html", task=None)  # task=None indicates this is a new task, not editing an existing one)   
 
+#====== All_tasks=====================
+@app.route("/tasks")
+@login_required
+def all_tasks():
+    conn= get_db_connection()
+    cursos = conn.cursor(dictionary=True)
+
+    cursor.execute(
+        """
+        SELECT *
+        FROM tasks
+        WHERE user_if = %s
+        ORDER BY is_complete ASC, priority DESC, deadline ASC, id DESC
+        """,
+        (session["user_id"],)
+    )
+    tasks = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    return render_template("all_tasks.html", task=tasks)
+    
 #====================complete task route=========================
 @app.route("/tasks/<int:task_id>/complete")
 @login_required
@@ -217,10 +239,11 @@ def dashboard():
 # Query 1: get tasks
     cursor.execute(
         """
-        SELECT id, title, deadline, priority, estimate_mins, is_complete
+        SELECT *
         FROM tasks
-        WHERE user_id = %s
-        ORDER BY id DESC
+        WHERE user_id = %s AND is_complete = 0
+        ORDER BY is_complete ASC, priority DESC, deadline ASC, id DESC
+        LIMIT 3 
         """,
         (session["user_id"],)
     )
