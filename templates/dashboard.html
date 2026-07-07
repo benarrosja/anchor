@@ -107,7 +107,7 @@
         <div class="timer-ring-wrapper">
             <svg viewBox="0 0 200 200" class="timer-ring-svg">
                 <circle cx="100" cy="100" r="90" class="timer-ring-bg"></circle>
-                <circle cx="100" cy="100" r="90" class="timer-ring-process"
+                <circle cx="100" cy="100" r="90" class="timer-ring-progress"
         id="timer-ring-progress"></circle>
             </svg>
             <div class="timer-ring-text" id="focus-timer-display">00:00</div>
@@ -130,6 +130,7 @@
 
 <script>
     let focusInterval = null;
+    let focusTotalSeconds = 0;
     let focusRemainingSeconds = 0;
     let focusTaskId = null;
     
@@ -143,6 +144,9 @@
     function playChime() {
         // web Audio API: genereates a soft two-tone chime, no external audio file needed
         const ctx = new (window.AudioContext || window.webkitAudioContext) ();
+        if (ctx.state === 'suspended'){
+            ctx.resume();
+        }
         const now = ctx.currentTime;
         [523.25, 659.25].forEach(function (freq, i) {
             const osc = ctx.createOscillator();
@@ -160,19 +164,24 @@
     }
 
     function updateRingVisual() {
-        const ring = document.getElementById( 'timer-ring-progresss');
-        const fractionRemaning = focusRemainingSeconds / focusTotalSeconds;
-        const offset = RING_CIRCUMFERENCE *(1 - fractionRemaning);
+    const ring = document.getElementById('timer-ring-progress');
+    const panel = document.querySelector('.focus-timer-panel');
+    const fractionRemaining = focusRemainingSeconds / focusTotalSeconds;
+    const offset = RING_CIRCUMFERENCE * (1 - fractionRemaining);
 
-        ring.style.strokeDashoffset = offset;
+    ring.style.strokeDashoffset = offset;
+    ring.classList.remove('warning', 'danger');
 
-        ring.classList.remove('warning', 'danger');
-        if (fractionRemaning <= 0.10) {
-            ring.classList.add('danger');
-        } else if (fractionRemaning <=0.30) {
-            ring.classList.add('warning');
-        }
+    if (fractionRemaining <= 0.10) {
+        ring.classList.add('danger');
+        panel.style.boxShadow = '0 4px 32px rgba(229, 57, 53, 0.25)';
+    } else if (fractionRemaining <= 0.30) {
+        ring.classList.add('warning');
+        panel.style.boxShadow = '';
+    } else {
+        panel.style.boxShadow = '';
     }
+}
 
     function startFocusTimer(taskId, estimateMins) {
         if (focusInterval) { clearInterval(focusInterval); }
@@ -196,7 +205,7 @@
             if (focusRemainingSeconds <= 0) {
                 clearInterval(focusInterval);
                 focusInterval = null;
-                playchime()
+                playChime();
                 document.getElementById('focus-task-label').textContent =
                     'Focus session finished! Logging…';
                 logFocusSession(taskId, estimateMins);
@@ -210,7 +219,7 @@
         focusRemainingSeconds = 0;
         document.getElementById('focus-task-label').textContent = 'No active focus session.';
         document.getElementById('focus-timer-display').textContent = '00:00';
-        document.getElementById(timer-ring-progress).style.strokeDashoffset = 0;
+        document.getElementById('timer-ring-progress').style.strokeDashoffset = 0;
         document.getElementById('timer-ring-progress').classList.remove('warning', 'danger');
     }
 

@@ -5,7 +5,7 @@
     border-radius: 14px;
     padding: 18px 20px;
     margin-bottom: 12px;
-    box-shadow: 0 1px 3 px rgba(0,0,0,0.06);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
     border-left: 6px solid #cccccc;
     transition: box-shadow 0.2s ease;
 }
@@ -17,7 +17,7 @@
 .task-card.priority-low {border-left-color: #43a047; }
 
 
-.task-tile {
+.task-title {
     font-size: 1.05rem;
     font-weight: 600;
     margin-bottom: 4px
@@ -63,7 +63,7 @@
     padding: 32px 24px;
     text-align: center;
     margin-top: 24px;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.03);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.3);
 }
 
 .timer-ring-wrapper {
@@ -85,15 +85,18 @@
     stroke-width: 10;
 }
 
-.time-ring-progress {
+.timer-ring-progress {
     fill: none;
     stroke: #4caf50; /* starts calm green */
     stroke-width: 10;
     stroke-linecap: round;
     stroke-dasharray: 565.48; /* 2 * rad * 90, the full circumferce */
     stroke-dashoffset: 0;
-    transition: stroke-dashoffset 1s linearm stroke 1s ease;
-}
+    transition: stroke-dashoffset 1s linear, stroke 1s ease; }
+
+.timer-ring-progress.warning { stroke: #f9a825; }
+.timer-ring-progress.danger  { stroke: #e53935; animation: pulse-ring 1s ease-in-out infinite; }
+
 
 @keyframes pulse-ring {
     0%, 100% { filter: drop-shadow(0 0 0px #e53935); }
@@ -103,11 +106,11 @@
 .timer-ring-text {
     position: absolute;
     top: 50%; left: 50%;
-    tansform; tanslate( -50%, -50%);
+    transform: translate( -50%, -50%);
     font-size: 2.2rem;
     font-weight: 700;
     color: #f0f0f0;
-    font-variant-numeric: tabular-num; /* prevents digits from jitteering width */
+    font-variant-numeric: tabular-nums; /* prevents digits from jitteering width */
 }
 
 .btn-cancel-focus {
