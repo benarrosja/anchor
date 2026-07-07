@@ -119,10 +119,13 @@ def logout():
 @login_required
 def add_task():
     if request.method == "POST":
-        title = request.form["title"].strip()
-        deadline = request.form["deadline"] or None
+        title = request.form.get("title", "").strip()
+        deadline = request.form.get("deadline") or None
         priority = int(request.form.get("priority", 2))
-        estimate_mins = int(request.form.get("estimate_mins", 25))
+        estimate_mins = int(request.form.get ("estimate_mins", 25))#
+        if not title:
+            flash ("Task title is required.", "danger")
+            return redirec(url_for("add_task"))
 
         conn = get_connection()
         cursor = conn.cursor()

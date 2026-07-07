@@ -80,9 +80,10 @@
                 <div class="task-actions mt-2">
                     {% if not task.is_complete %}
                         <button class="btn-primary-action"
-                            onclick="startFocusTimer({{ task.id }}, {{ task.estimate_mins }})">
+                            onclick="startFocusTimer({{ task.id }}, '{{ task.title|escape }}', {{ task.estimate_mins }})">
                             ▶ Start focus ({{ task.estimate_mins }}m)
                         </button>
+
                         <button class="btn-icon-ghost"
                             onclick="getCoachTip({{ task.id }}, '{{ task.title|escape }}', '{{ task.deadline or '' }}', {{ task.priority }})">
                              I'm stuck!
@@ -103,6 +104,8 @@
 
 
     <div class="focus-timer-panel">
+        <p class="focus-task-label"> FOCUS ZONE</p>
+        <p class="focus-task-label" id="focus-task-label">Pick a task and press Start.</p>
         <p class="focus-task-label" id="focus-task-label"> No active focus session.</p>
         <div class="timer-ring-wrapper">
             <svg viewBox="0 0 200 200" class="timer-ring-svg">
@@ -183,7 +186,7 @@
     }
 }
 
-    function startFocusTimer(taskId, estimateMins) {
+    function startFocusTimer(taskId, taskTitle, estimateMins) {
         if (focusInterval) { clearInterval(focusInterval); }
 
         focusTaskId = taskId;
@@ -191,7 +194,7 @@
         focusRemainingSeconds = focusTotalSeconds;
 
         document.getElementById('focus-task-label').textContent =
-            'Focusing on task #' + taskId + ' for ' + estimateMins + ' minutes.';
+            'Focusing on: '+ taskTitle;
         document.getElementById('focus-timer-display').textContent =
     formatTime(focusRemainingSeconds);
         updateRingVisual();
@@ -207,7 +210,7 @@
                 focusInterval = null;
                 playChime();
                 document.getElementById('focus-task-label').textContent =
-                    'Focus session finished! Logging…';
+                    'Nice work- session complete!';
                 logFocusSession(taskId, estimateMins);
             }
         }, 1000);
