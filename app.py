@@ -149,14 +149,14 @@ def add_task():
 @app.route("/tasks")
 @login_required
 def all_tasks():
-    conn= get_db_connection()
-    cursos = conn.cursor(dictionary=True)
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
 
     cursor.execute(
         """
         SELECT *
         FROM tasks
-        WHERE user_if = %s
+        WHERE user_id = %s
         ORDER BY is_complete ASC, priority DESC, deadline ASC, id DESC
         """,
         (session["user_id"],)

@@ -6,7 +6,7 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
             <h2 class="fw-bold mb-1">All tasks</h2>
-            <p class="text-muted mb-0">Your full task list, ordered by urgency.</p>
+            <p class="text-muted mb-0">Organised by urgency so the list feels easier to scan.</p>
         </div>
         <div class="d-flex gap-2">
             <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">Back to dashboard</a>
@@ -14,70 +14,99 @@
         </div>
     </div>
 
-    {% if tasks %}
-        <div class="task-list">
-            {% for task in tasks %}
-                {% if task.priority == 3 %}
-                    {% set priority_class = 'priority-high' %}
-                    {% set priority_label = 'High' %}
-                {% elif task.priority == 2 %}
-                    {% set priority_class = 'priority-medium' %}
-                    {% set priority_label = 'Medium' %}
-                {% else %}
-                    {% set priority_class = 'priority-low' %}
-                    {% set priority_label = 'Low' %}
-                {% endif %}
+    {% macro render_task(task) %}
+        {% if task.priority == 3 %}
+            {% set priority_class = 'priority-high' %}
+            {% set priority_label = 'High' %}
+        {% elif task.priority == 2 %}
+            {% set priority_class = 'priority-medium' %}
+            {% set priority_label = 'Medium' %}
+        {% else %}
+            {% set priority_class = 'priority-low' %}
+            {% set priority_label = 'Low' %}
+        {% endif %}
 
-                <div class="task-card {{ priority_class }} {% if task.is_complete %}opacity-50{% endif %}">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <div class="task-title {% if task.is_complete %}text-decoration-line-through{% endif %}">
-                                {{ task.title }}
-                            </div>
-                            <div class="task-meta">
-                                {{ priority_label }}
-                                {% if task.deadline %} · Due {{ task.deadline }}{% endif %}
-                                {% if task.estimate_mins %} · {{ task.estimate_mins }} min{% endif %}
-                            </div>
-                        </div>
-
-                        <div class="dropdown">
-                            <button class="btn-icon-ghost" data-bs-toggle="dropdown">⋯</button>
-                            <ul class="dropdown-menu dropdown-menu-small dropdown-menu-end">
-                                <li>
-                                    <a class="dropdown-item" href="{{ url_for('edit_task', task_id=task.id) }}">
-                                        Edit
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item text-danger"
-                                       href="{{ url_for('delete_task', task_id=task.id) }}"
-                                       onclick="return confirm('Delete this task?');">
-                                        Delete
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
+        <div class="task-card {{ priority_class }} {% if task.is_complete %}opacity-50{% endif %}">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="task-title {% if task.is_complete %}text-decoration-line-through{% endif %}">
+                        {{ task.title }}
                     </div>
-
-                    <div class="task-actions mt-2">
-                        {% if not task.is_complete %}
-                            <button class="btn-primary-action"
-                                onclick="window.location.href='{{ url_for('dashboard') }}'">
-                                Start from dashboard
-                            </button>
-
-                            <a href="{{ url_for('complete_task', task_id=task.id) }}" class="btn-icon-ghost ms-auto">
-                                ✓ Mark done
-                            </a>
-                        {% else %}
-                            <span class="badge bg-success">Completed</span>
-                        {% endif %}
+                    <div class="task-meta">
+                        {{ priority_label }}
+                        {% if task.deadline %} · Due {{ task.deadline }}{% endif %}
+                        {% if task.estimate_mins %} · {{ task.estimate_mins }} min{% endif %}
                     </div>
                 </div>
-            {% endfor %}
+
+                <div class="dropdown">
+                    <button class="btn-icon-ghost" data-bs-toggle="dropdown">⋯</button>
+                    <ul class="dropdown-menu dropdown-menu-small dropdown-menu-end">
+                        <li><a class="dropdown-item" href="{{ url_for('edit_task', task_id=task.id) }}">Edit</a></li>
+                        <li>
+                            <a class="dropdown-item text-danger"
+                               href="{{ url_for('delete_task', task_id=task.id) }}"
+                               onclick="return confirm('Delete this task?');">
+                                Delete
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="task-actions mt-2">
+                {% if not task.is_complete %}
+                    <button class="btn-primary-action"
+                        onclick="window.location.href='{{ url_for('dashboard') }}'">
+                        Start from dashboard
+                    </button>
+                    <a href="{{ url_for('complete_task', task_id=task.id) }}" class="btn-icon-ghost ms-auto">
+                        v Mark done
+                    </a>
+                {% else %}
+                    <span class="badge bg-success">Completed</span>
+                {% endif %}
+            </div>
         </div>
-    {% else %}
+    {% endmacro %}
+
+    {% if overdue_tasks %}
+        <section class="mb-4">
+            <h4 class="fw-bold text-danger mb-3">Overdue</h4>
+            {% for task in overdue_tasks %}
+                {{ render_task(task) }}
+            {% endfor %}
+        </section>
+    {% endif %}
+
+    {% if due_soon_tasks %}
+        <section class="mb-4">
+            <h4 class="fw-bold text-warning mb-3">Due soon</h4>
+            {% for task in due_soon_tasks %}
+                {{ render_task(task) }}
+            {% endfor %}
+        </section>
+    {% endif %}
+
+    {% if later_tasks %}
+        <section class="mb-4">
+            <h4 class="fw-bold text-secondary mb-3">Later</h4>
+            {% for task in later_tasks %}
+                {{ render_task(task) }}
+            {% endfor %}
+        </section>
+    {% endif %}
+
+    {% if completed_tasks %}
+        <section class="mb-4">
+            <h4 class="fw-bold text-success mb-3">Completed</h4>
+            {% for task in completed_tasks %}
+                {{ render_task(task) }}
+            {% endfor %}
+        </section>
+    {% endif %}
+
+    {% if not overdue_tasks and not due_soon_tasks and not later_tasks and not completed_tasks %}
         <div class="text-center mt-5">
             <h4 class="fw-bold">No tasks yet</h4>
             <p class="text-muted">Start by adding your first task.</p>
