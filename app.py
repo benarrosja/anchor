@@ -12,6 +12,7 @@ from functools import wraps
 from db import get_connection
 from priority import compute_priority_score 
 from datetime import datetime
+from datetime import date
 from datetime import date, timedelta
 import json
 
@@ -161,10 +162,38 @@ def all_tasks():
         (session["user_id"],)
     )
     tasks = cursor.fetchall()
+    
     cursor.close()
     conn.close()
 
-    return render_template("all_tasks.html", task=tasks)
+    today = date.today()
+    next_week = today + timedelta(days=7)
+    
+    overdue_tasks = []
+    due_soon_tasks = []
+    later_tasks = []
+    completed_tasks = []
+
+    for task in tasks:
+        if task["is_complete"]:
+            completed_tasks.append(task)
+        elif task["deadline"]:
+            if task["deadline"] < today:
+                overdue_tasks.append(task)
+            elif task["deadline"] <= next_week:          
+                due_soon_tasks.append(task)
+            else:
+                later_tasks.append(task)
+        else:
+            later_tasks.append(task)
+        
+    return render_template(
+        "all_tasks.html",
+        overdue_tasks=overdue_tasks,
+        due_soon_tasks=due_soon_tasks,
+        later_tasks=later_tasks,
+        completed_tasks=completed_tasks
+        )
 
 #====================complete task route=========================
 @app.route("/tasks/<int:task_id>/complete")
