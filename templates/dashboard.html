@@ -6,14 +6,15 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
             <h2 class="fw-bold mb-1">Good to see you</h2>
-            <p class="text-muted mb-0">Your tasks ordered here.</p>
-            <p class="text-muted mb-3"> Showing your 3 most important tasks.</p>
+           
+        
     <div class="d-flex justify-content-between align-items-center mb-2">
         <h4 class="fw-bold mb-0">Top 3 tasks</h4>
-    <a href="{{ url_for('all_tasks') }}" class="text-decoration-none">View all</a>
+    <a href="{{ url_for('all_tasks') }}" class="text-decoration-none"> View all</a>
 </div>
 <p class="text-muted mb-3">Only the tasks most worth your attention are shown here.</p>
         </div>
+        
         <a href="{{ url_for('add_task') }}" class="btn btn-dark">+ Add Task</a>
     </div>
 

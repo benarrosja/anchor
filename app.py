@@ -165,7 +165,7 @@ def all_tasks():
     conn.close()
 
     return render_template("all_tasks.html", task=tasks)
-    
+
 #====================complete task route=========================
 @app.route("/tasks/<int:task_id>/complete")
 @login_required
@@ -214,8 +214,8 @@ def coach_tip(task_id):
     prompt = (
         f"A user with ADHD feels stuck starting this task: '{title}' ."
         f"Deadline: {deadline}.Priority level: {priority} (1=low, 3=high). "
-        "Give ONE thiny, concrete first action they could do in under 2 minutes. "
-        "keep it under 20 words. No generic advice like 'just stat' - be specific."
+        "Breack down this task into thiny maneageable steps, concrete first action they could do in under the dealine in minutes. "
+        "keep it under 20 words. No generic advice like 'just start' - be specific."
     )
     try:
         response = gemini_client.models.generate_content(
