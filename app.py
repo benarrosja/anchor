@@ -7,6 +7,7 @@ load_dotenv() # MUST run BEFORE reading any os.getenv(...)
 print("GEMINI KEY LOADED:", bool(os.getenv("GEMINI_API_KEY")))
 gemini_client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
+from breakdown import get_task_breakdown
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from db import get_connection
@@ -283,6 +284,33 @@ def coach_tip(task_id):
         tip = "Open the task and write just one sentence or step. That's the whole goal for now. "
 
     return jsonify({"tip": tip})
+
+# ======BREAKDOWN Route =======
+@app.route("/tasks/<int:task_id>/breakdown", methods=["POST"])
+@login_required
+def task_breakdown(task_id):
+    """
+    Returns a JSON breakdown of micro-steps for a stuck user.
+    Called via fetch() from dashboard.html and all_tasks.html.
+    """
+    data = request.get_json(force=True)
+
+    title        = data.get("title", "this task")
+    deadline     = data.get("deadline") or None
+    priority     = int(data.get("priority", 2))
+    estimate_mins = int(data.get("estimate_mins", 25))
+    energy_level = session.get("energy_level", 3)   # from session set by /set_energy
+
+    result = get_task_breakdown(
+        title=title,
+        deadline=deadline,
+        priority=priority,
+        estimate_mins=estimate_mins,
+        energy_level=energy_level
+    )
+
+    return jsonify(result)
+
 
 # =========DASHBOARD-Route protected page(requires login)=====
 
