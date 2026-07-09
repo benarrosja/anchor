@@ -15,15 +15,24 @@
     </div>
 
     {% macro render_task(task) %}
-        {% if task.priority == 3 %}
-            {% set priority_class = 'priority-high' %}
-            {% set priority_label = 'High' %}
-        {% elif task.priority == 2 %}
-            {% set priority_class = 'priority-medium' %}
-            {% set priority_label = 'Medium' %}
-        {% else %}
-            {% set priority_class = 'priority-low' %}
-            {% set priority_label = 'Low' %}
+      <div class="task-actions mt-2">
+    {% if not task.is_complete %}
+        <button class="btn-primary-action"
+            onclick="window.location.href='{{ url_for('dashboard') }}'">
+            Start from dashboard
+        </button>
+        <!-- NEW -->
+        <button class="btn-icon-ghost"
+            onclick="getBreakdown({{ task.id }}, '{{ task.title|escape }}', '{{ task.deadline or '' }}', {{ task.priority }}, {{ task.estimate_mins }})">
+             I'm stuck!
+        </button>
+        <a href="{{ url_for('complete_task', task_id=task.id) }}" class="btn-icon-ghost ms-auto">
+            ✓ Mark done
+        </a>
+    {% else %}
+        <span class="badge bg-success">Completed</span>
+    {% endif %}
+</div>label = 'Low' %}
         {% endif %}
 
         <div class="task-card {{ priority_class }} {% if task.is_complete %}opacity-50{% endif %}">
@@ -114,4 +123,23 @@
         </div>
     {% endif %}
 </div>
+
+<!-- Breakdown panel for all_tasks page -->
+<div id="breakdown-box" class="card border-0 shadow-sm mb-4 mt-3" style="display:none; border-radius:14px; background:#eef3fb;">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <p class="text-muted mb-0" style="font-size:0.75rem; letter-spacing:0.5px;"> MICRO-STEPS</p>
+            <button class="btn-close btn-sm" onclick="document.getElementById('breakdown-box').style.display='none'"></button>
+        </div>
+        <div id="breakdown-steps"></div>
+        <p id="breakdown-source" class="text-muted mb-0 mt-2" style="font-size:0.7rem;"></p>
+    </div>
+</div>
+
+<script>
+// Paste the exact same getBreakdown() function here
+function getBreakdown(taskId, title, deadline, priority, estimateMins) {
+    // ... same function as in dashboard.html
+}
+</script>
 {% endblock %}
