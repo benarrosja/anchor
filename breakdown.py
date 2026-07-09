@@ -23,7 +23,7 @@ def _get_client():
 
 #=========== prompting=======
 
-def _building_prompt(title: str, deadline: str, priority: int, estimate_mins: int, energy_level: int) -> str:
+def _build_prompt(title: str, deadline: str, priority: int, estimate_mins: int, energy_level: int) -> str:
     """
     Constructs an ADHD-Aware prompt that instructs Gemini to return a strict JSON array of micro-steps - no prose, no markdown.
 
