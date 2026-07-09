@@ -6,6 +6,16 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
             <h2 class="fw-bold mb-1">Good to see you</h2>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                    <div class="alert" style="font-size:0.875rem; border-radius:10px;">
+                        {{ message}}
+                        <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                  {% endfor %}
+                {%endif %}
+            {% endwith %}
            
  <!-- Energy Check-in Widget — place near top of dashboard.html -->
 <div class="card mb-4 border-0 shadow-sm">

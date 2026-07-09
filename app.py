@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify, flash
 from google import genai
 import os
 from dotenv import load_dotenv
@@ -127,6 +127,8 @@ def set_energy():
     conn.commit()
     cursor.close()
     conn.close()
+    labels = {1: "Exhausted ", 2: "Low ", 3: "Okay ", 4: "Good ", 5: "Energised "}
+    flash(f"Energy updated to {labels[energy]} Tasks re-ranked!", "success")
 
     return redirect(url_for("dashboard"))
 
