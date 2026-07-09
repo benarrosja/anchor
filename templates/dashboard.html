@@ -7,7 +7,30 @@
         <div>
             <h2 class="fw-bold mb-1">Good to see you</h2>
            
-        
+ <!-- Energy Check-in Widget — place near top of dashboard.html -->
+<div class="card mb-4 border-0 shadow-sm">
+  <div class="card-body py-3">
+    <p class="mb-2 fw-semibold">⚡ How's your energy today?</p>
+    <form method="POST" action="/set_energy" class="d-flex gap-2 flex-wrap">
+      {% for level, label, emoji in [
+          (1,"Exhausted", "😴"),
+          (2, "Low",  "😕"),
+          (3,"Okay",  "😐"),
+          (4, "Good", "😊"),
+          (5, "Energised","🚀")
+      ] %}
+      <button
+        type="submit"
+        name="energy"
+        value="{{ level }}"
+        class="btn btn-sm {% if session.get('energy_level', 3) == level %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+        {{ emoji }} {{ label }}
+      </button>
+      {% endfor %}
+    </form>
+  </div>
+</div>
+
     <div class="d-flex justify-content-between align-items-center mb-2">
         <h4 class="fw-bold mb-0">Top 3 tasks</h4>
     <a href="{{ url_for('all_tasks') }}" class="text-decoration-none"> View all</a>

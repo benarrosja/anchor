@@ -100,11 +100,35 @@ def login():
         if user and check_password_hash(user["password_hash"], password):
             session["user_id"] = user["id"]
             session["email"] = user["email"]
+            session["energy_level"] = user.get("energy_level", 3)
             return redirect(url_for("dashboard"))
 
         return render_template("login.html", error="Incorrect email or password.")
 
     return render_template("login.html")
+
+#====================SET ENERGY ROUTE
+@app.route("/set_energy", methods=["POST"])
+@login_required
+def set_energy():
+    energy = int(request.form.get("energy", 3))
+    energy = max(1, min(5, energy)) # clamp to 1-5 range
+
+    # saving to session (immediat effect on scoring)
+    session["energy_level"] = energy
+    
+    # persist to DB so it survices page reloads
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "UPDATE users SET energy_level = %s WHERE id = %s",
+        (energy, session["user_id"])
+    )
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return redirect(url_for("dashboard"))
 
 
 # ==============LOGOUT==================
@@ -321,8 +345,9 @@ def dashboard():
             break
 
 # adding a computed priority score to each task 
+    energy_level = session.get("energy_level", 3 ) # default is 3
     for t in tasks:
-        t["score"] = compute_priority_score(t)
+        t["score"] = compute_priority_score(t, energy_level=energy_level)
     tasks.sort(key=lambda t: (-t["score"], t["id"])) # sort by score descending, then by id
 
     return render_template(
