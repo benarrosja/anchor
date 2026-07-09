@@ -125,7 +125,7 @@ def add_task():
         priority = int(request.form.get("priority", 2))
         estimate_mins = int(request.form.get ("estimate_mins", 25))#
         if not title:
-            flash ("Task title is required.", "danger")
+            flask ("Task title is required.", "danger")
             return redirec(url_for("add_task"))
 
         conn = get_connection()
@@ -243,7 +243,7 @@ def coach_tip(task_id):
     prompt = (
         f"A user with ADHD feels stuck starting this task: '{title}' ."
         f"Deadline: {deadline}.Priority level: {priority} (1=low, 3=high). "
-        "Breack down this task into thiny maneageable steps, concrete first action they could do in under the dealine in minutes. "
+        "Break down this task into thiny manageable steps, concrete first action they could do in under the deadline in minutes. "
         "keep it under 20 words. No generic advice like 'just start' - be specific."
     )
     try:

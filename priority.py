@@ -1,7 +1,11 @@
 from datetime import date
+import math
+
+def normalise_priority(priority):
+    return (priority-1 /2)
 
 def days_until(deadline):
-    """Returns days from today until deadline ( negative if overdue, lasge if far away)."""
+    """Returns days from today until deadline ( negative if overdue, large if far away)."""
     if deadline is None:
         return 999 # treats no deadline as far in the future
     if isinstance(deadline, str): # assume YYYY-MM-DD format, simplify; Flask/MySQL may already give date objects
@@ -10,6 +14,7 @@ def days_until(deadline):
     else:
         d= deadline
     return (d - date.today()).days
+    
 def compute_priority_score(task):
     """ taks is a dict with keys: priority (1-3), deadline, estimate_mins
     Higher score=  more urgent/ important."""
@@ -17,7 +22,7 @@ def compute_priority_score(task):
     
     days = days_until(task["deadline"])
 
-    # Closer deadline should boost the score. Overvude evern more.abs
+    # Closer deadline should boost the score. Overdue even more
     if days <=0:
         deadline_factor = 2.0
     elif days <= 2:
@@ -37,4 +42,5 @@ def compute_priority_score(task):
         size_factor = 0.8
     
     score = base * deadline_factor * size_factor
-    return round(score,3) 
+    return round(score,3)
+ 
