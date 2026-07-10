@@ -84,19 +84,18 @@
         <p id="breakdown-source" class="text-muted mb-0 mt-2" style="font-size:0.7rem;"></p>
     </div>
 </div>
-
+<!-- task list  with Staart focus  and no Im stuck button --> 
     {% if tasks %}
-    <div class="task-list">
-        {% for task in tasks %}
+           {% for task in tasks %}
             {% if task.priority == 3 %}
                 {% set priority_class = 'priority-high' %}
                 {% set priority_label = 'High' %}
             {% elif task.priority == 2 %}
-                {% set priority_class = 'priority-medium' %}
+                {% set priority_class= 'priority-medium' %}
                 {% set priority_label = 'Medium' %}
             {% else %}
                 {% set priority_class = 'priority-low' %}
-                {% set priority_label = 'Low' %}
+                {% set priority_label= 'Low' %}
             {% endif %}
 
             <div class="task-card {{ priority_class }} {% if task.is_complete %}opacity-50{% endif %}">
@@ -118,7 +117,8 @@
                         <ul class="dropdown-menu dropdown-menu-small dropdown-menu-end">
                             <li><a class="dropdown-item" href="{{ url_for('edit_task', task_id=task.id) }}">Edit</a></li>
                             <li><a class="dropdown-item text-danger" href="{{ url_for('delete_task', task_id=task.id) }}"
-                                   onclick="return confirm('Delete this task?');">Delete</a></li>
+                                   onclick="return confirm('Delete this task?');">Delete
+                                </a></li>
                         </ul>
                     </div>
                 </div>
@@ -126,18 +126,20 @@
                 <div class="task-actions mt-2">
                     {% if not task.is_complete %}
                         <button class="btn-primary-action"
-                            onclick="startFocusTimer({{ task.id }}, '{{ task.title|escape }}', 
-                            {{ task.estimate_mins }}, '{{ task.deadline or '' }}', {{ task.priority }})" >
-                             Start focus ({{ task.estimate_mins }}m)
+                            onclick="startFocusTimer(
+                                {{ task.id }},
+                                '{{ task.title|escape }}',
+                                 {{ task.estimate_mins }}, 
+                                 '{{ task.deadline or '' }}',
+                                 {{ task.priority }}
+                                 )">
+                                Start focus ({{ task.estimate_mins }}m)
                         </button>
 
-                        <button class="btn-icon-ghost"
-                            onclick="getBreakdown({{ task.id }}, '{{ task.title|escape }}', '{{ task.deadline or '' }}', {{ task.priority }}, {{ task.estimate_mins }})">
-     I'm stuck!!!
-                        </button>
-                        <a href="{{ url_for('complete_task', task_id=task.id) }}" class="btn-icon-ghost ms-auto">
-                            ✓ Mark done
-                        </a>
+                        <a href="{{url_for('complete_task', task_id=task.id) }}"
+                         class="btn-icon-ghost ms-auto"> v Mark Done
+                         </a>
+                            
                     {% else %}
                         <span class="badge bg-success">Completed</span>
                     {% endif %}
@@ -242,13 +244,122 @@
     to { opacity: 1; transform: translateY(0); }
 }
 </style>
+
+<!-- Focus overlay -->
+
+<div id="focus-overlay" style="
+    display:none; position:fixed; inset:0;
+    background:#f5f6ff; z-index:2000;
+    padding:24px 16px 40px; overflow-y:auto;">
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <span class="text-muted" style="font-size:0.75rem; letter-spacing:0.8px;">
+      FOCUS MODE
+    </span>
+    <button class="btn btn-sm btn-outline-secondary" onclick="exitFocusMode()">
+      ✕ Exit focus mode
+    </button>
+  </div>
+
+  <div class="text-center mb-4">
+    <h3 id="fo-title" class="fw-bold mb-1" style="color:#1a1a2e;"></h3>
+    <p id="fo-meta" class="text-muted mb-0" style="font-size:0.85rem;"></p>
+  </div>
+
+  <div class="d-flex justify-content-center mb-4">
+    <div style="position:relative;width:170px;height:170px;">
+      <svg viewBox="0 0 200 200" style="width:100%;height:100%;transform:rotate(-90deg);">
+        <circle cx="100" cy="100" r="88"
+          fill="none" stroke="#eeeeee" stroke-width="12"></circle>
+        <circle cx="100" cy="100" r="88"
+          fill="none" stroke="#4361ee" stroke-width="12"
+          stroke-linecap="round"
+          stroke-dasharray="552.92"
+          stroke-dashoffset="0"
+          id="fo-ring"
+          style="transition:stroke-dashoffset 1s linear, stroke 0.4s ease;">
+        </circle>
+      </svg>
+      <div id="fo-time" style="
+        position:absolute;top:50%;left:50%;
+        transform:translate(-50%,-50%);
+        font-size:2rem;font-weight:700;
+        color:#1a1a2e;letter-spacing:-1px;">
+        00:00
+      </div>
+    </div>
+  </div>
+
+  <!-- I'm stuck button in focus mode -->
+  <div class="text-center mb-3">
+    <button class="btn btn-sm btn-outline-primary"
+      onclick="getBreakdown(
+        focusTaskId,
+        document.getElementById('fo-title').textContent,
+        '',  /* deadline already visible */
+        currentTaskPriority,
+        currentTaskEstimate
+      )">
+       I'm stuck – suggest micro-steps
+    </button>
+  </div>
+
+  <!-- Subtasks + cues -->
+  <div style="max-width:480px;margin:0 auto;">
+    <p class="fw-semibold mb-2" style="font-size:0.85rem;color:#6c757d;letter-spacing:0.5px;">
+      MY SUBTASKS
+    </p>
+    <p class="text-muted mb-2" style="font-size:0.8rem;">
+      Break the task into tiny, 3–10 minute actions. Example: “Open doc”, “Write heading”, “Outline 3 bullets”.
+    </p>
+
+    <ul id="fo-subtask-list" class="list-unstyled mb-3"></ul>
+
+    <div class="d-flex gap-2 mb-4">
+      <input id="fo-subtask-input" type="text"
+        class="form-control form-control-sm"
+        placeholder="Add a subtask..."
+        onkeydown="if(event.key==='Enter') addSubtask()">
+      <button class="btn btn-sm btn-outline-primary" onclick="addSubtask()">Add</button>
+    </div>
+
+    <div class="d-flex justify-content-center">
+      <a id="fo-complete-link" href="#"
+         class="btn btn-success px-4">
+        ✓ Mark task complete
+      </a>
+    </div>
+  </div>
+
+  <!-- Breakdown panel inside focus mode -->
+  <div id="breakdown-box" class="card border-0 shadow-sm mt-4"
+       style="display:none;border-radius:14px;background:#eef3fb;max-width:480px;margin:24px auto 0;">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <p class="text-muted mb-0" style="font-size:0.75rem;letter-spacing:0.5px;"> MICRO-STEPS</p>
+        <button class="btn-close btn-sm"
+          onclick="document.getElementById('breakdown-box').style.display='none'"></button>
+      </div>
+      <div id="breakdown-steps"></div>
+      <p id="breakdown-source" class="text-muted mb-0 mt-2" style="font-size:0.7rem;"></p>
+    </div>
+  </div>
+</div>
+
+<!-- Countsown + Multiple subtasks + Im stuck button -->
+
 <script>
+
+//========= state======
     let focusInterval = null;
     let focusTotalSeconds = 0;
     let focusRemainingSeconds = 0;
     let focusTaskId = null;
+    let currentTasksEstimate = 0;
+    let currentTaskPriority = 2;
+    const FO_CIRCUMFERENCE = 552.92;
+
     
-    const RING_CIRCUMFERENCE = 552.92; //2pi * 88
     //====utilities =====
     function formatTime(seconds) {
         const m = Math.floor(seconds / 60);
@@ -275,25 +386,28 @@
         });
     }
 // ====== Rig Visual
-    function updateRingVisual() {
+    function updateRing() {
         const ring = document.getElementById('fo-ring');
+        if (!focusTotalSeconds) return;
         const fraction = focusRemainingSeconds / focusTotalSeconds;
          
         ring.style.strokeDashoffset = FO_CIRCUMFERENCE * (1 - fraction);
-        ring.style.stroke = fraction <= 0.10? '#e63946'
-                            :fraction<= 0.30? '#f4a261'
+        ring.style.stroke = fraction <= 0.10 ? '#e63946'
+                            :fraction<= 0.30 ? '#f4a261'
                             : '#4361ee';
         }
-// === subtask persistence ( local Storage keyed by task id)===
-    function subtaksKey(taskId) { return 'anchor_subtasks_'+ taskId; }
+// === subtask (local Storage keyed by task id)===
+    function subtaskKey(taskId) {
+        return 'anchor_subtasks_'+ taskId; }
    
     function loadSubtasks(taskId) {
-        try {return JSON.parse(localStorage.getItem(subtaksKey(taskId))) || []; }
-        catch(e) {return []; }
+        try {
+            return JSON.parse(localStorage.getItem(subtaskKey(taskId))) || []; }
+        catch(e) { return []; }
     }
 
-    function saveSubtask(taskId, list){
-        localStorage.setItem(subtaksKey(taskId),  JSON.stringify(list));
+    function saveSubtasks(taskId, list) {
+        localStorage.setItem(subtaskKey(taskId),  JSON.stringify(list));
     }
      function renderSubtasks(taskId) {
     const ul   = document.getElementById('fo-subtask-list');
@@ -317,15 +431,13 @@ list.forEach(function(item, idx) {
             <button class="btn-close btn-sm ms-auto" style="font-size:0.6rem;"
                 onclick="deleteSubtask(${taskId}, ${idx})">
             </button>`;
-
             ul.appendChild(li);
     });
 }
    function addSubtask() {
     const input = document.getElementById('fo-subtask-input');
     const text = input.value.trim();
-    if (!text) return;
-
+    if (!text || !focusTaskId) return;
     const list = loadSubtasks(focusTaskId);
     list.push({ text:text, done: false });
     saveSubtasks(focusTaskId, list);
@@ -347,19 +459,21 @@ function deleteSubtask(taskId, idx) {
     saveSubtasks(taskId, list);
     renderSubtasks(taskId);
 }
-
+// === Focus mode entry exit========
 function startFocusTimer(taskId, taskTitle, estimateMins, taskDeadline, taskPriority) {
     if (focusInterval) clearInterval(focusInterval);
 
     focusTaskId = taskId;
+    currentTasksEstimate= estimateMins;
+    currentTaskPriority= taskPriority;
     focusTotalSeconds = estimateMins * 60;
     focusRemainingSeconds= focusTotalSeconds;
 
     // Populate overlay
     document.getElementById('fo-title').textContent = taskTitle;
 
-    const priorityLabel = taskPriority === 3 ? 'High'
-                    : taskPriority === 2 ? 'Medium' : 'Low';
+    const priorityLabel = taskPriority === 3 ? 'High':
+                        taskPriority === 2 ? 'Medium' : 'Low';
     const deadlineStr = taskDeadline ? ' · Due ' + taskDeadline : '';
     document.getElementById('fo-meta').textContent = priorityLabel + deadlineStr + ' · ' + estimateMins + ' min';
 
@@ -379,7 +493,11 @@ function startFocusTimer(taskId, taskTitle, estimateMins, taskDeadline, taskPrio
         focusRemainingSeconds -= 1;
         document.getElementById('fo-time').textContent = formatTime(focusRemainingSeconds);
         updateRing();
-
+// simple cue : aftert each 10 mins, encourage checking subtasks
+        if (focusRemainingSeconds % 600 === 0 && focusRemainingSeconds > 0) {
+      document.getElementById('fo-meta').textContent =
+        'Take 10 seconds to tick any finished subtasks.';
+        }
         if (focusRemainingSeconds <= 0) {
             clearInterval(focusInterval);
             focusInterval= null;
@@ -397,7 +515,7 @@ function exitFocusMode() {
     document.body.style.overflow = '';
     focusTaskId = null;
 }
-
+//===== Log focus to backend ====
 function logFocusSession(taskId, estimateMins) {
     fetch('/focus/log', {
         method: 'POST',
@@ -408,7 +526,7 @@ function logFocusSession(taskId, estimateMins) {
     });
 }
 
-// ==== Im stuck breakdown ===
+// ==== Im stuck breakdown - inside focus mode ===
 function getBreakdown(taskId, title, deadline, priority, estimateMins) {
     const box = document.getElementById('breakdown-box');
     const steps = document.getElementById('breakdown-steps');
@@ -422,13 +540,17 @@ function getBreakdown(taskId, title, deadline, priority, estimateMins) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-            title: title, deadline: deadline,
-            priority: priority, estimate_mins: estimateMins
+            title: title, 
+            deadline: deadline,
+            priority: priority, 
+            estimate_mins: estimateMins
         })
     })
-    .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+    .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
     .then(function(data) {
-        steps.innerHTML = data.steps.map(s => `
+        steps.innerHTML = data.steps.map(function(s) {
+            return `
+        
             <div class="d-flex gap-2 align-items-start mb-2">
                 <span class="badge bg-primary rounded-circle flex-shrink-0"
                       style="width:24px;height:24px;line-height:16px;text-align:center;">
@@ -438,13 +560,14 @@ function getBreakdown(taskId, title, deadline, priority, estimateMins) {
                     <span class="fw-semibold">${s.action}</span>
                     <span class="text-muted ms-1" style="font-size:0.8rem;">· ${s.duration_mins} min</span>
                 </div>
-            </div>`).join('');
+            </div>`;
+        }).join('');
         source.textContent = data.source === 'fallback'
-            ? 'AI unavailable — showing default steps.'
+            ? ' OOPS! AI unavailable — showing default steps.'
             : 'Steps generated by Gemini AI';
     })
-    .catch(() => {
-        steps.innerHTML = '<p class="text-danger">Could not load steps. Please try again.</p>';
+    .catch(function() {
+        steps.innerHTML = '<p class="text-danger">Could not load steps. Please try again another time. </p>';
     });
 }
 </script>
