@@ -246,9 +246,9 @@
     let focusTotalSeconds = 0;
     let focusRemainingSeconds = 0;
     let focusTaskId = null;
-
-    const RING_CIRCUMFERENCE = 565.48;
-
+    
+    const RING_CIRCUMFERENCE = 552.92; //2pi * 88
+    //====utilities =====
     function formatTime(seconds) {
         const m = Math.floor(seconds / 60);
         const s = seconds % 60;
@@ -273,117 +273,179 @@
             osc.stop(now + i * 0.35 + 1.3);
         });
     }
-
+// ====== Rig Visual
     function updateRingVisual() {
-        const ring = document.getElementById('timer-ring-progress');
-        const fractionRemaining = focusRemainingSeconds / focusTotalSeconds;
-        const offset = RING_CIRCUMFERENCE * (1 - fractionRemaining);
-        ring.style.strokeDashoffset = offset;
-        ring.classList.remove('warning', 'danger');
-        if      (fractionRemaining <= 0.10) ring.classList.add('danger');
-        else if (fractionRemaining <= 0.30) ring.classList.add('warning');
+        const ring = document.getElementById('fo-ring');
+        const fraction = focusRemainingSeconds / focusTotalSeconds;
+         
+        ring.style.strokeDashoffset = FO_CIRCUMFERENCE * (1 - fraction);
+        ring.style.stroke = fraction <= 0.10? '#e63946'
+                            :fraction<= 0.30? '#f4a261'
+                            : '#4361ee';
+        }
+// === subtask persistence ( local Storage keyed by task id)===
+    function subtaksKey(taskId) { return 'anchor_subtasks_'+ taskId; }
+   
+    function loadSubtasks(taskId) {
+        try {return JSON.parse(localStorage.getItem(subtaksKey(taskId))) || []; }
+        catch(e) {return []; }
     }
 
-    function startFocusTimer(taskId, taskTitle, estimateMins) {
-        if (focusInterval) clearInterval(focusInterval);
+    function saveSubtask(taskId, list){
+        localStorage.setItem(subtaksKey(taskId),  JSON.stringify(list));
+    }
+     function renderSubtasks(taskId) {
+    const ul   = document.getElementById('fo-subtask-list');
+    const list = loadSubtasks(taskId);
+    ul.innerHTML = '';
 
-        focusTaskId          = taskId;
-        focusTotalSeconds    = estimateMins * 60;
-        focusRemainingSeconds = focusTotalSeconds;
-
-        // Show the panel
-        const panel = document.getElementById('focus-timer-panel');
-        panel.style.display = 'block';
-
-        document.getElementById('focus-task-label').textContent = '🎯 ' + taskTitle;
-        document.getElementById('focus-timer-display').textContent = formatTime(focusRemainingSeconds);
-        updateRingVisual();
-
-        focusInterval = setInterval(function() {
-            focusRemainingSeconds -= 1;
-            document.getElementById('focus-timer-display').textContent = formatTime(focusRemainingSeconds);
-            updateRingVisual();
-
-            if (focusRemainingSeconds <= 0) {
-                clearInterval(focusInterval);
-                focusInterval = null;
-                playChime();
-                document.getElementById('focus-task-label').textContent = ' Session complete!';
-                logFocusSession(taskId, estimateMins);
-            }
-        }, 1000);
+    if (list.length === 0) {
+        ul.innerHTML = '<li class="text-muted" style="font-size:0.85rem;">No subtasks yet — add one below.</li>';
+        return;
     }
 
-    function cancelFocusTimer() {
-        if (focusInterval) { clearInterval(focusInterval); focusInterval = null; }
-        focusTaskId = null;
-        focusRemainingSeconds = 0;
-        document.getElementById('focus-timer-panel').style.display = 'none';
-        document.getElementById('focus-task-label').textContent = 'Pick a task and press Start.';
-        document.getElementById('focus-timer-display').textContent = '00:00';
-        const ring = document.getElementById('timer-ring-progress');
-        ring.style.strokeDashoffset = 0;
-        ring.classList.remove('warning', 'danger');
-    }
+list.forEach(function(item, idx) {
+        const li = document.createElement('li');
+        li.className = 'd-flex align-items-center gap-2 mb-2';
+        li.innerHTML = `
+            <input type="checkbox" class="form-check-input mt-0" ${item.done ? 'checked': ''}
+                onchange="toggleSubtask(${taskId}, ${idx}, this.checked)">
+            <span class="${item.done ? 'fo-subtask-done': ''}" style="font-size:0.9rem;">
+                ${item.text}
+            </span>
+            <button class="btn-close btn-sm ms-auto" style="font-size:0.6rem;"
+                onclick="deleteSubtask(${taskId}, ${idx})">
+            </button>`;
 
-    function logFocusSession(taskId, estimateMins) {
-        fetch('/focus/log', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ task_id: taskId, duration_mins: estimateMins })
-        }).then(function(response) {
-            document.getElementById('focus-task-label').textContent =
-                response.ok ? ' Session logged! Well done.' : ' Could not log session.';
-        }).catch(function() {
-            document.getElementById('focus-task-label').textContent = ' Network error — session not logged.';
-        });
-    }
+            ul.appendChild(li);
+    });
+}
+   function addSubtask() {
+    const input = document.getElementById('fo-subtask-input');
+    const text = input.value.trim();
+    if (!text) return;
 
-    function getBreakdown(taskId, title, deadline, priority, estimateMins) {
-        const box    = document.getElementById('breakdown-box');
-        const steps  = document.getElementById('breakdown-steps');
-        const source = document.getElementById('breakdown-source');
+    const list = loadSubtasks(focusTaskId);
+    list.push({ text:text, done: false });
+    saveSubtasks(focusTaskId, list);
+    renderSubtasks(focusTaskId);
+    input.value= '';
+    input.focus();
+}
 
-        box.style.display = 'block';
-        steps.innerHTML = '<p class="text-muted">Breaking it down for you...</p>';
-        source.textContent = '';
+function toggleSubtask(taskId, idx, done) {
+    const list= loadSubtasks(taskId);
+    list[idx].done= done;
+    saveSubtasks(taskId, list);
+    renderSubtasks(taskId);
+}
 
-        fetch('/tasks/' + taskId + '/breakdown', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                title: title,
-                deadline: deadline,
-                priority: priority,
-                estimate_mins: estimateMins
-            })
+function deleteSubtask(taskId, idx) {
+    const list = loadSubtasks(taskId);
+    list.splice(idx,1);
+    saveSubtasks(taskId, list);
+    renderSubtasks(taskId);
+}
+
+function startFocusTimer(taskId, taskTitle, estimateMins, taskDeadline, taskPriority) {
+    if (focusInterval) clearInterval(focusInterval);
+
+    focusTaskId = taskId;
+    focusTotalSeconds = estimateMins * 60;
+    focusRemainingSeconds= focusTotalSeconds;
+
+    // Populate overlay
+    document.getElementById('fo-title').textContent = taskTitle;
+
+    const priorityLabel = taskPriority === 3 ? 'High'
+                    : taskPriority === 2 ? 'Medium' : 'Low';
+    const deadlineStr = taskDeadline ? ' · Due ' + taskDeadline : '';
+    document.getElementById('fo-meta').textContent = priorityLabel + deadlineStr + ' · ' + estimateMins + ' min';
+
+    document.getElementById('fo-time').textContent = formatTime(focusRemainingSeconds);
+    document.getElementById('fo-complete-link').href = '/tasks/' + taskId + '/complete';
+
+    // Load saved subtasks
+    renderSubtasks(taskId);
+
+    // Show overlay, hide page scroll
+    document.getElementById('focus-overlay').style.display= 'block';
+    document.body.style.overflow ='hidden';
+    updateRing();
+
+    // Start countdown
+    focusInterval = setInterval(function() {
+        focusRemainingSeconds -= 1;
+        document.getElementById('fo-time').textContent = formatTime(focusRemainingSeconds);
+        updateRing();
+
+        if (focusRemainingSeconds <= 0) {
+            clearInterval(focusInterval);
+            focusInterval= null;
+            playChime();
+            document.getElementById('fo-time').textContent = 'Horayyy!!';
+            document.getElementById('fo-meta').textContent = 'It is complete! Great work.';
+            logFocusSession(taskId, estimateMins);
+        }
+    }, 1000);
+}
+
+function exitFocusMode() {
+    if (focusInterval) { clearInterval(focusInterval); focusInterval = null; }
+    document.getElementById('focus-overlay').style.display= 'none';
+    document.body.style.overflow = '';
+    focusTaskId = null;
+}
+
+function logFocusSession(taskId, estimateMins) {
+    fetch('/focus/log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:JSON.stringify({ task_id: taskId, duration_mins: estimateMins })
+    }).catch(function() {
+        console.warn('Could not log focus session.');
+    });
+}
+
+// ==== Im stuck breakdown ===
+function getBreakdown(taskId, title, deadline, priority, estimateMins) {
+    const box = document.getElementById('breakdown-box');
+    const steps = document.getElementById('breakdown-steps');
+    const source = document.getElementById('breakdown-source');
+
+    box.style.display = 'block';
+    steps.innerHTML = '<p class="text-muted">Breaking it down for you...</p>';
+    source.textContent = '';
+
+    fetch('/tasks/' + taskId + '/breakdown', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            title: title, deadline: deadline,
+            priority: priority, estimate_mins: estimateMins
         })
-        .then(function(response) {
-            if (!response.ok) throw new Error('Server error');
-            return response.json();
-        })
-        .then(function(data) {
-            const html = data.steps.map(function(s) {
-                return `
-                <div class="d-flex gap-2 align-items-start mb-2">
-                    <span class="badge bg-primary rounded-circle flex-shrink-0"
-                          style="width:24px;height:24px;line-height:16px;text-align:center;">
-                        ${s.step}
-                    </span>
-                    <div>
-                        <span class="fw-semibold">${s.action}</span>
-                        <span class="text-muted ms-1" style="font-size:0.8rem;">· ${s.duration_mins} min</span>
-                    </div>
-                </div>`;
-            }).join('');
-            steps.innerHTML = html;
-            source.textContent = data.source === 'fallback'
-                ? 'AI unavailable — showing default steps.'
-                : 'Steps generated by Gemini AI';
-        })
-        .catch(function() {
-            steps.innerHTML = '<p class="text-danger">Could not load steps. Please try again.</p>';
-        });
-    }
+    })
+    .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+    .then(function(data) {
+        steps.innerHTML = data.steps.map(s => `
+            <div class="d-flex gap-2 align-items-start mb-2">
+                <span class="badge bg-primary rounded-circle flex-shrink-0"
+                      style="width:24px;height:24px;line-height:16px;text-align:center;">
+                    ${s.step}
+                </span>
+                <div>
+                    <span class="fw-semibold">${s.action}</span>
+                    <span class="text-muted ms-1" style="font-size:0.8rem;">· ${s.duration_mins} min</span>
+                </div>
+            </div>`).join('');
+        source.textContent = data.source === 'fallback'
+            ? 'AI unavailable — showing default steps.'
+            : 'Steps generated by Gemini AI';
+    })
+    .catch(() => {
+        steps.innerHTML = '<p class="text-danger">Could not load steps. Please try again.</p>';
+    });
+}
 </script>
+
 {% endblock %}
