@@ -23,7 +23,7 @@ def _get_client():
 
 #=========== prompting=======
 
-def _build_prompt(title: str, deadline: str, priority: int, estimate_mins: int, energy_level: int) -> str:
+def _building_prompt(title: str, deadline: str, priority: int, estimate_mins: int, energy_level: int) -> str:
     """
     Constructs an ADHD-Aware prompt that instructs Gemini to return a strict JSON array of micro-steps - no prose, no markdown.
 
@@ -145,7 +145,7 @@ def get_task_breakdown(title: str,
 
     Never raises — always returns a usable response.
     """
-    prompt = _build_prompt(title, deadline, priority, estimate_mins, energy_level)
+    prompt = _building_prompt(title, deadline, priority, estimate_mins, energy_level)
 
     try:
         client = _get_client()

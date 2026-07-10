@@ -149,102 +149,155 @@
     {% endif %}
 
 
-    <div class="focus-timer-panel">
-        <p class="focus-task-label"> FOCUS ZONE</p>
-        <p class="focus-task-label" id="focus-task-label">Pick a task and press Start.</p>
-        <p class="focus-task-label" id="focus-task-label"> No active focus session.</p>
-        <div class="timer-ring-wrapper">
-            <svg viewBox="0 0 200 200" class="timer-ring-svg">
-                <circle cx="100" cy="100" r="90" class="timer-ring-bg"></circle>
-                <circle cx="100" cy="100" r="90" class="timer-ring-progress"
-        id="timer-ring-progress"></circle>
-            </svg>
-            <div class="timer-ring-text" id="focus-timer-display">00:00</div>
-        </div>
-        <button class="btn-cancel-focus"
-    onclick="cancelFocusTimer()">Cancel</button>
+    <!-- Focus Timer Panel — redesigned -->
+<div class="focus-timer-panel" id="focus-timer-panel" style="display:none;">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <p class="focus-task-label mb-0" style="font-size:0.7rem; letter-spacing:0.5px; color:#6c757d;">
+            FOCUS ZONE
+        </p>
+        <button class="btn-close btn-sm" onclick="cancelFocusTimer()" aria-label="Close timer"></button>
     </div>
+    <p class="focus-task-label fw-semibold mb-3" id="focus-task-label"
+       style="font-size:0.95rem; color:#1a1a2e;">
+        Pick a task and press Start.
+    </p>
+
+    <div class="timer-ring-wrapper">
+        <svg viewBox="0 0 200 200" class="timer-ring-svg">
+            <circle cx="100" cy="100" r="90" class="timer-ring-bg"></circle>
+            <circle cx="100" cy="100" r="90" class="timer-ring-progress"
+                    id="timer-ring-progress"></circle>
+        </svg>
+        <div class="timer-ring-text" id="focus-timer-display">00:00</div>
+    </div>
+
+    <button class="btn btn-outline-danger btn-sm mt-3 w-100" onclick="cancelFocusTimer()">
+        ✕ Cancel session
+    </button>
+</div>
+
+<style>
+/* ── Focus Timer Panel ───────────────────────────────────── */
+.focus-timer-panel {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 220px;
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+    padding: 20px 18px 16px;
+    z-index: 1050;
+    text-align: center;
+}
+.timer-ring-wrapper {
+    position: relative;
+    width: 130px;
+    height: 130px;
+    margin: 0 auto 8px;
+}
+.timer-ring-svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+.timer-ring-bg {
+    fill: none;
+    stroke: #f0f0f0;
+    stroke-width: 10;
+}
+.timer-ring-progress {
+    fill: none;
+    stroke: #4361ee;
+    stroke-width: 10;
+    stroke-linecap: round;
+    stroke-dasharray: 565.48;
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset 1s linear, stroke 0.4s ease;
+}
+.timer-ring-progress.warning { stroke: #f4a261; }
+.timer-ring-progress.danger  { stroke: #e63946; }
+.timer-ring-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    letter-spacing: -0.5px;
+}
+</style>
 
 <script>
     let focusInterval = null;
     let focusTotalSeconds = 0;
     let focusRemainingSeconds = 0;
     let focusTaskId = null;
-    
-    const RING_CIRCUMFERENCE = 565.48; // 2* rad * 90, matches the SVG radius
+
+    const RING_CIRCUMFERENCE = 565.48;
 
     function formatTime(seconds) {
         const m = Math.floor(seconds / 60);
         const s = seconds % 60;
         return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
     }
+
     function playChime() {
-        // web Audio API: genereates a soft two-tone chime, no external audio file needed
-        const ctx = new (window.AudioContext || window.webkitAudioContext) ();
-        if (ctx.state === 'suspended'){
-            ctx.resume();
-        }
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        if (ctx.state === 'suspended') ctx.resume();
         const now = ctx.currentTime;
-        [523.25, 659.25].forEach(function (freq, i) {
-            const osc = ctx.createOscillator();
+        [523.25, 659.25].forEach(function(freq, i) {
+            const osc  = ctx.createOscillator();
             const gain = ctx.createGain();
             osc.frequency.value = freq;
             osc.type = 'sine';
-            gain.gain. setValueAtTime(0.0001, now +i * 0.35);
+            gain.gain.setValueAtTime(0.0001, now + i * 0.35);
             gain.gain.exponentialRampToValueAtTime(0.15, now + i * 0.35 + 0.05);
             gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.35 + 1.2);
             osc.connect(gain);
             gain.connect(ctx.destination);
-            osc.start(now + i + 0.35);
-            osc.stop(now + i +0.35 +1.3);      
+            osc.start(now + i * 0.35);
+            osc.stop(now + i * 0.35 + 1.3);
         });
     }
 
     function updateRingVisual() {
-    const ring = document.getElementById('timer-ring-progress');
-    const panel = document.querySelector('.focus-timer-panel');
-    const fractionRemaining = focusRemainingSeconds / focusTotalSeconds;
-    const offset = RING_CIRCUMFERENCE * (1 - fractionRemaining);
-
-    ring.style.strokeDashoffset = offset;
-    ring.classList.remove('warning', 'danger');
-
-    if (fractionRemaining <= 0.10) {
-        ring.classList.add('danger');
-        panel.style.boxShadow = '0 4px 32px rgba(229, 57, 53, 0.25)';
-    } else if (fractionRemaining <= 0.30) {
-        ring.classList.add('warning');
-        panel.style.boxShadow = '';
-    } else {
-        panel.style.boxShadow = '';
+        const ring = document.getElementById('timer-ring-progress');
+        const fractionRemaining = focusRemainingSeconds / focusTotalSeconds;
+        const offset = RING_CIRCUMFERENCE * (1 - fractionRemaining);
+        ring.style.strokeDashoffset = offset;
+        ring.classList.remove('warning', 'danger');
+        if      (fractionRemaining <= 0.10) ring.classList.add('danger');
+        else if (fractionRemaining <= 0.30) ring.classList.add('warning');
     }
-}
 
     function startFocusTimer(taskId, taskTitle, estimateMins) {
-        if (focusInterval) { clearInterval(focusInterval); }
+        if (focusInterval) clearInterval(focusInterval);
 
-        focusTaskId = taskId;
-        focusTotalSeconds = estimateMins * 60
+        focusTaskId          = taskId;
+        focusTotalSeconds    = estimateMins * 60;
         focusRemainingSeconds = focusTotalSeconds;
 
-        document.getElementById('focus-task-label').textContent =
-            'Focusing on: '+ taskTitle;
-        document.getElementById('focus-timer-display').textContent =
-    formatTime(focusRemainingSeconds);
+        // Show the panel
+        const panel = document.getElementById('focus-timer-panel');
+        panel.style.display = 'block';
+
+        document.getElementById('focus-task-label').textContent = '🎯 ' + taskTitle;
+        document.getElementById('focus-timer-display').textContent = formatTime(focusRemainingSeconds);
         updateRingVisual();
 
-        focusInterval = setInterval(function () {
+        focusInterval = setInterval(function() {
             focusRemainingSeconds -= 1;
-            document.getElementById('focus-timer-display').textContent =
-    formatTime(focusRemainingSeconds);
+            document.getElementById('focus-timer-display').textContent = formatTime(focusRemainingSeconds);
             updateRingVisual();
 
             if (focusRemainingSeconds <= 0) {
                 clearInterval(focusInterval);
                 focusInterval = null;
                 playChime();
-                document.getElementById('focus-task-label').textContent =
-                    'Nice work- session complete!';
+                document.getElementById('focus-task-label').textContent = ' Session complete!';
                 logFocusSession(taskId, estimateMins);
             }
         }, 1000);
@@ -254,10 +307,12 @@
         if (focusInterval) { clearInterval(focusInterval); focusInterval = null; }
         focusTaskId = null;
         focusRemainingSeconds = 0;
-        document.getElementById('focus-task-label').textContent = 'No active focus session.';
+        document.getElementById('focus-timer-panel').style.display = 'none';
+        document.getElementById('focus-task-label').textContent = 'Pick a task and press Start.';
         document.getElementById('focus-timer-display').textContent = '00:00';
-        document.getElementById('timer-ring-progress').style.strokeDashoffset = 0;
-        document.getElementById('timer-ring-progress').classList.remove('warning', 'danger');
+        const ring = document.getElementById('timer-ring-progress');
+        ring.style.strokeDashoffset = 0;
+        ring.classList.remove('warning', 'danger');
     }
 
     function logFocusSession(taskId, estimateMins) {
@@ -265,83 +320,58 @@
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ task_id: taskId, duration_mins: estimateMins })
-        }).then(function (response) {
-            document.getElementById('focus-task-label').textContent = 
-            response.ok? 'Focus session logged!': 'Could not log session( server error).';
-                }).catch(function () {
-            document.getElementById('focus-task-label').textContent = 'Could not log session (network error).';
+        }).then(function(response) {
+            document.getElementById('focus-task-label').textContent =
+                response.ok ? ' Session logged! Well done.' : ' Could not log session.';
+        }).catch(function() {
+            document.getElementById('focus-task-label').textContent = ' Network error — session not logged.';
         });
     }
 
     function getBreakdown(taskId, title, deadline, priority, estimateMins) {
-        const box = document.getElementById('breakdown-box');
-        const text = document.getElementById('breakdown-steps');
+        const box    = document.getElementById('breakdown-box');
+        const steps  = document.getElementById('breakdown-steps');
         const source = document.getElementById('breakdown-source');
-        
-        // show panel with loading state
+
         box.style.display = 'block';
         steps.innerHTML = '<p class="text-muted">Breaking it down for you...</p>';
         source.textContent = '';
-        
-        fetch('/tasks/'+ taskId + '/breakdown', {
+
+        fetch('/tasks/' + taskId + '/breakdown', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 title: title,
                 deadline: deadline,
                 priority: priority,
-                estimateMins: estimateMins
+                estimate_mins: estimateMins
             })
         })
-        .then(function(reponse){
-            if (!response.ok) throw new Error('Sever error');
-            return response.json();
-        })
-        .then(function(data){
-            // render numbered steps 
-            const html= data.steps.map(function(s){
-                return `
-                 <div class="d-flex gap-2 align-items-start mb-2">
-                <span class="badge bg-primary rounded-circle flex-shrink-0"
-                      style="width:24px;height:24px;line-height:16px;text-align:center;">
-                    ${s.step}
-                </span>
-                <div>
-                    <span class="fw-semibold">${s.action}</span>
-                    <span class="text-muted ms-1" style="font-size:0.8rem;">
-                        · ${s.duration_mins} min
-                    </span>
-                </div>
-            </div>`;
-        }).join('');
-
-        steps.innerHTML = html;
-        source.textContent = data.source === 'fallback'
-            ? ' AI unavailable — showing default steps.'
-            : ' Steps generated by Gemini AI';
-    })
-    .catch(function() {
-        steps.innerHTML = '<p class="text-danger">Could not load steps. Try again.</p>';
-    });
-}
-
-        box.style.display = 'block';
-        text.textContent = 'Thinking...';
-
-        fetch('/tasks/' + taskId + '/coach', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title: title, deadline: deadline, priority: priority })
-        })
         .then(function(response) {
-            if (!response.ok) { throw new Error('Server error'); }
+            if (!response.ok) throw new Error('Server error');
             return response.json();
         })
         .then(function(data) {
-            text.textContent = data.tip;
+            const html = data.steps.map(function(s) {
+                return `
+                <div class="d-flex gap-2 align-items-start mb-2">
+                    <span class="badge bg-primary rounded-circle flex-shrink-0"
+                          style="width:24px;height:24px;line-height:16px;text-align:center;">
+                        ${s.step}
+                    </span>
+                    <div>
+                        <span class="fw-semibold">${s.action}</span>
+                        <span class="text-muted ms-1" style="font-size:0.8rem;">· ${s.duration_mins} min</span>
+                    </div>
+                </div>`;
+            }).join('');
+            steps.innerHTML = html;
+            source.textContent = data.source === 'fallback'
+                ? 'AI unavailable — showing default steps.'
+                : 'Steps generated by Gemini AI';
         })
         .catch(function() {
-            text.textContent = "Start with just 2 minutes on this task. That's enough for now.";
+            steps.innerHTML = '<p class="text-danger">Could not load steps. Please try again.</p>';
         });
     }
 </script>
