@@ -126,8 +126,9 @@
                 <div class="task-actions mt-2">
                     {% if not task.is_complete %}
                         <button class="btn-primary-action"
-                            onclick="startFocusTimer({{ task.id }}, '{{ task.title|escape }}', {{ task.estimate_mins }})">
-                            ▶ Start focus ({{ task.estimate_mins }}m)
+                            onclick="startFocusTimer({{ task.id }}, '{{ task.title|escape }}', 
+                            {{ task.estimate_mins }}, '{{ task.deadline or '' }}', {{ task.priority }})" >
+                             Start focus ({{ task.estimate_mins }}m)
                         </button>
 
                         <button class="btn-icon-ghost"
