@@ -4,7 +4,6 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv() # MUST run BEFORE reading any os.getenv(...)
-print("GEMINI KEY LOADED:", bool(os.getenv("GEMINI_API_KEY")))
 gemini_client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 from breakdown import get_task_breakdown
@@ -468,4 +467,4 @@ def log_focus():
 # Remove debug=True before deploying to Railway
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=False)
