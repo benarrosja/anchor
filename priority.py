@@ -12,20 +12,21 @@ def compute_priority_score(task, energy_level=3):
     """
     # ======U: Urgency via exponential decay ===
     # e^(-0.15* days): due today aprox. 1, due in 7 days aprox 0.35
+    
     deadline = task.get("deadline")
+
     if deadline is None:
         U = 0.50 # neutral for no-deadline tasks
     else:
-       return 999 # treats no deadline as far in the future
-    if isinstance(deadline, str): # assuming  YYYY-MM-DD format, simplify; Flask/MySQL may already give date objects
-        year, month, day = map(int, deadline.split("-"))
-        deadline = date(year, month, day)
-    days_remaining = max(0, (deadline - date.today()).days)
-    U = math.exp(-0.15 * days_remaining)
-
+        if isinstance(deadline, str):
+            # assuming  YYYY-MM-DD format, simplify; Flask/MySQL may already give date objects
+            year, month, day = map(int, deadline.split("-"))
+            deadline = date(year, month, day)
+        days_remaining = max(0, (deadline - date.today()).days)
+        U = math.exp(-0.15 * days_remaining)
     # === I: importance
     priority = task.get("priority", 2)
-    I = (priority -1)/2
+    I = (priority -1) / 2
     
     #==== E: Energy Fit e.g High ener + big task is fine but not low ener + Low task ====
     energy_norm = ( energy_level - 1) / 4 # eg. 1 = 0 , 3 = 0.5, 5 =1
@@ -39,5 +40,5 @@ def compute_priority_score(task, energy_level=3):
     # E is high when energy matches  task weight
     E = 1.0 - abs(energy_norm- task_weight)
 
-    score + (0.50 * U) + (0.35 * I) + (0.15 * E)
+    score = (0.50 * U) + (0.35 * I) + (0.15 * E)
     return round(score, 4)
