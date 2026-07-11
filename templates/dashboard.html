@@ -301,7 +301,7 @@
     let focusTotalSeconds = 0;
     let focusRemainingSeconds = 0;
     let focusTaskId = null;
-    let currentTasksEstimate = 0;
+    let currentTaskEstimate = 0;
     let currentTaskPriority = 2;
     let currentTaskTitle = '';
     let currentTaskDeadline = '';
@@ -415,7 +415,7 @@ function startFocusTimer(taskId, taskTitle, estimateMins, taskDeadline, taskPrio
 
     focusTaskId = taskId;
     currentTaskTitle= taskTitle;
-    currentTasksEstimate= estimateMins;
+    currentTaskEstimate= estimateMins;
     currentTaskPriority= taskPriority;
     currentTaskDeadline= taskDeadline;
     focusTotalSeconds = estimateMins * 60;
