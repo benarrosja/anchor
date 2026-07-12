@@ -141,6 +141,58 @@ def logout():
     session.clear()
     return redirect(url_for("login"))
 
+
+# ====Quick  Add ( Brain Dump) route========
+@app.route("/quick_add_task", methods =["POST"])
+@login_required
+def quick_add_task():
+    """
+    Brain Dump needs only a tile. Optional: may also send deadline, timeframe, estimate_mins.
+    Always returns instantly with sensible silent defaults.
+    """
+    data = request.get_json(force=True)
+    title = (data.get("title") or "").strip()
+
+    if not title:
+        return jsonify({"success": False, "error": "Title is required."}), 400
+    deadline = data.get("deadline") or None
+    timeframe = data.get("timeframe") # today , week none, none
+    estimate_mins = data.get("estimate_mins") or None
+
+    # Map timeframe - deadline + priority, only if no explicit date was given
+    if not deadline and timeframe:
+        today = date.today()
+        if timeframe == "today":
+            deadline= today
+            priority = 3
+        elif timeframe == "week":
+            deadline = today + timedelta(days=7)
+            priority = 2
+        else:    # "none" - No rush
+            deadline = None
+            priority = 1
+    else:
+        priority = 2    # neutral default when nothing was chosen at all
+
+    conn= get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        INSERT INTO tasks (user_id, title, deadline, priority, estimate_mins)
+        VALUES (%s, %s, %s, %s, %s)
+        """,
+        (session["user_id"], title, deadline, priority, estimate_mins)
+    )
+    conn.commit()
+    new_task_id = cursor.lastrowid
+    cursor.close()
+    conn.close()
+
+    return jsonify({"success": True, "task_id": new_task_id})
+
+
+
+
  #====================Add Task route============
 @app.route("/add_task", methods=["GET", "POST"])
 @login_required
