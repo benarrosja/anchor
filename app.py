@@ -371,8 +371,8 @@ def task_breakdown(task_id):
 def dashboard():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
-# Fetch all incomplete tasks - no limit
-# the true ranking depends on comput_priorty_score(), not rae SQL order 
+#Query 1-  Fetch all incomplete tasks - no limit, score first slice later 
+# the true ranking depends on comput_priorty_score(), not MSQL order 
     cursor.execute(
         """
         SELECT * FROM tasks
@@ -382,23 +382,17 @@ def dashboard():
     )
     tasks = cursor.fetchall()
 
-    return render_template(
-        "dashboard.html",
-        tasks=tasks,
-        total_focus_minutes=total_focus_minutes,
-        streak=streak
-    )
-# Query 1: get tasks
+    
+# Query2: get todays toatal focus time
     cursor.execute(
         """
-        SELECT *
-        FROM tasks
-        WHERE user_id = %s AND is_complete = 0
-        ORDER BY is_complete ASC, priority DESC, deadline ASC, id DESC
-        LIMIT 3 
+        SELECT SUM(elapsed_secs) AS total_secs
+        FROM focus_sessions
+        WHERE user_id = %s
         """,
         (session["user_id"],)
     )
+
     tasks = cursor.fetchall()
 
 # Query 2: get todya's total focus time ( before closing, e.g cursor/conn.close)
@@ -425,13 +419,26 @@ def dashboard():
         (session["user_id"],)
 
     )
-    focus_days_rows = cursor.fetchall()
-    focus_days = [row["session_date"] for row in focus_days_rows]
+    result = cursor.fetchone()
+    total_secs= result["total_secs"] or 0
+    total_focus_minutes = total_secs // 60
+
+    # query 3 : distinct foucs days for streak
+    cursor.execute(
+        """
+        SELECT DISTINCT session_date
+        FROM focus_sessions
+        WHERE user_id = %s
+        ORDER BYsession_date DESC
+        """,
+        (session["user_id"],)
+    )
+    focus_days = [row["session_date"] for row in cursor.fetchall()]
 
 #Now I can close - after all queries are done
     cursor.close()
     conn.close()
-# adding the streak calculation using Python
+# adding the streak calculation
        
     streak = 0 
     expected_day = date.today()
@@ -443,7 +450,8 @@ def dashboard():
         else:
             break
 
-# adding a computed priority score to each task 
+# Score every task, then sort, then slice to top 3
+#Raking is : urgency (exponential decay), importance (priority 1–3), and energy-fit all feeding into one real score, sorted, then sliced to 3 
     energy_level = session.get("energy_level", 3 ) # default is 3
     for t in tasks:
         t["score"] = compute_priority_score(t, energy_level=energy_level)
@@ -537,4 +545,4 @@ def log_focus():
 # Remove debug=True before deploying to Railway
 
 if __name__ == "__main__":
-    app.run(debug=False)
+    app.run(debug=True)
