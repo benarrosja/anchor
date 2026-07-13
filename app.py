@@ -371,6 +371,23 @@ def task_breakdown(task_id):
 def dashboard():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
+# Fetch all incomplete tasks - no limit
+# the true ranking depends on comput_priorty_score(), not rae SQL order 
+    cursor.execute(
+        """
+        SELECT * FROM tasks
+        WHERE user_id = %s AND is_complete = 0
+        """,
+        (session["user_id"],)
+    )
+    tasks = cursor.fetchall()
+
+    return render_template(
+        "dashboard.html",
+        tasks=tasks,
+        total_focus_minutes=total_focus_minutes,
+        streak=streak
+    )
 # Query 1: get tasks
     cursor.execute(
         """
@@ -431,6 +448,7 @@ def dashboard():
     for t in tasks:
         t["score"] = compute_priority_score(t, energy_level=energy_level)
     tasks.sort(key=lambda t: (-t["score"], t["id"])) # sort by score descending, then by id
+    tasks = tasks[:3]   # slice after scoring, not before
 
     return render_template(
         "dashboard.html",
