@@ -46,10 +46,69 @@
     max-width: 520px;
     margin: 24px auto 0;
   }
+  /* Brain Dump  */
+.braindump-card {
+  background: #fafafa;
+  border-radius: 16px;
+  padding: 20px;
+  border: 1px solid #eee;
+  margin-bottom: 24px;
+  position: relative;
+}
+
+#brain-dump-input {
+  padding: 14px 44px 14px 16px;
+  border-radius: 12px;
+  font-size: 1.05rem;
+  border: 1px solid #ddd;
+  width: 100%;
+}
+
+#brain-dump-check {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  font-size: 1.3rem;
+  color: #2e7d32;
+  pointer-events: none;
+}
+
+.bd-details-toggle {
+  text-decoration: none;
+  font-size: 0.85rem;
+  color: #6c757d;
+  padding-left: 0;
+  background: none;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+#brain-dump-details{
+    display: none;
+    margin-top: 14px;
+}
+
+.bd-chip, .bd-dur-chip {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  color: #212529;
+
+
+
+.bd-chip.,.bd.bd-dur-chip.active{
+  background: #212529;
+  color: #fff;
+  border-color: #212529;
+}
 </style>
 {% endblock %}
-
-
 
 
 {% block content %}
@@ -68,11 +127,49 @@
                 {%endif %}
             {% endwith %}
            </div>
+ 
 
            <a href="{{ url_for('add_task') }}" class="btn btn-dark">+ Add Task</a>
            </div>
 
- <!-- Energy Check-in Widget — place near top of dashboard.html -->
+
+ <!-- Brain Dump: quick capture, always visible -->
+    <div class="braindump-card">
+        <p class="mb-2 fw-semibold">What's on your mind?</p>
+        <div id="brain-dump-input-wrap">
+            <input id="brain-dump-input" type="text" class="form-control"
+                placeholder="e.g. Write the instruction paragraph"
+                autocomplete="off"
+                onkeydown="if(event.key==='Enter'){event.preventDefault(); submitBrainDump();}">
+            <span id="brain-dump-check">✓</span>
+        </div>
+        <button type="button" class="bd-details-toggle mt-2" onclick="toggleBrainDumpDetails()">
+            <span id="bd-toggle-arrow">⌄</span> Add details (optional)
+        </button>
+        <div id="brain-dump-details">
+            <p class="text-muted mb-1" style="font-size:0.8rem;">When is it due? (optional)</p>
+            <input id="bd-deadline" type="date" class="form-control form-control-sm mb-3" style="max-width:220px;">
+            <p class="text-muted mb-1" style="font-size:0.8rem;">Timeframe</p>
+            <div class="d-flex gap-2 flex-wrap mb-3">
+                <button type="button" class="bd-chip active" data-value="none">No rush</button>
+                <button type="button" class="bd-chip" data-value="this_week">This week</button>
+                <button type="button" class="bd-chip" data-value="today">Today</button>
+            </div>
+            <p class="text-muted mb-1" style="font-size:0.8rem;">How long will it take?</p>
+            <div class="d-flex gap-2 flex-wrap align-items-center">
+                <button type="button" class="bd-dur-chip" data-value="5">5 min</button>
+                <button type="button" class="bd-dur-chip" data-value="15">15 min</button>
+                <button type="button" class="bd-dur-chip" data-value="25">25 min</button>
+                <button type="button" class="bd-dur-chip" data-value="45">45 min</button>
+                <button type="button" class="bd-dur-chip" data-value="custom">Custom</button>
+                <input id="bd-duration-custom" type="number" min="1"
+                    class="form-control form-control-sm" style="display:none; max-width:100px;"
+                    placeholder="mins">
+            </div>
+        </div>
+    </div>
+
+ <!-- Energy Check-in Widget -->
 
  <div class="energy-card p-3 mb-4">
     <p class="mb-2 fw-semibold">⚡ How's your energy today?</p>
@@ -100,7 +197,7 @@
 </div>
 <p class="text-muted mb-3">Only the tasks most worth your attention are shown here.</p>
        
-    <!-- Stat cards: Today's Focus + Streak side by side -->
+    <!-- Stat cards: Todays Focus + Streak side by side -->
     <div class="row g-3 mb-4">
         <div class="col-6">
             <div class="stat-card">
@@ -120,19 +217,7 @@
         </div>
     </div>
 
-    <!-- breakdown panel - hidden until button "I'm stuck" is clicked -->
-    <div id="breakdown-box" class="card border-0 shadow-sm mb-4" style="display:none; border-radius:14px;background:#eef3fb;">
-        <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-            <p class="text-muted mb-0" style="font-size:0.75rem; letter-spacing:0.5px;"> MICRO-STEPS</p>
-            <button class="btn-close btn-sm" onclick="document.getElementById('breakdown-box').style.display='none'"></button>
-        </div>
-        <div id="breakdown-steps">
-            <!-- Steps rendered here by JS -->
-        </div>
-        <p id="breakdown-source" class="text-muted mb-0 mt-2" style="font-size:0.7rem;"></p>
-    </div>
-</div>
+   
 <!-- task list  with Staart focus  and no Im stuck button --> 
     {% if tasks %}
     <div class="task-list">
@@ -161,9 +246,9 @@
                         </div>
                     </div>
 
-                    <!-- Overflow menu: Edit / Delete tucked away, not competing visually -->
+                    <!-- Overflow menu: Edit / Delete tucked away -->
                     <div class="dropdown">
-                        <button class="btn-icon-ghost" data-bs-toggle="dropdown">⋯</button>
+                        <button class="btn-icon-ghost" data-bs-toggle="dropdown">...</button>
                         <ul class="dropdown-menu dropdown-menu-small dropdown-menu-end">
                             <li><a class="dropdown-item" href="{{ url_for('edit_task', task_id=task.id) }}">Edit</a></li>
                             <li><a class="dropdown-item text-danger" href="{{ url_for('delete_task', task_id=task.id) }}"
@@ -187,7 +272,7 @@
                         </button>
 
                         <a href="{{url_for('complete_task', task_id=task.id) }}"
-                         class="btn-icon-ghost ms-auto"> v Mark Done
+                         class="btn-icon-ghost ms-auto"> ✓ Mark Done
                          </a>
                             
                     {% else %}
@@ -525,6 +610,87 @@ function getBreakdown(taskId, title, deadline, priority, estimateMins) {
         steps.innerHTML = '<p class="text-danger">Could not load steps. Please try again another time. </p>';
     });
 }
-</script>
+    // Brain Dump JS
+    let bdTimeframe = 'none'; // default: no rush
+    let bdDuration = null; // default unestimated 
+function toggleBrainDumpDetails() {
+  const panel = document.getElementById('brain-dump-details');
+  const arrow = document.getElementById('bd-toggle-arrow');
+  const isHidden = panel.style.display === 'none' || panel.style.display === '';
+  panel.style.display = isHidden ? 'block' : 'none';
+  arrow.textContent = isHidden ? '⌃' : '⌄';
+}
 
+document.querySelectorAll('.bd-chip').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.bd-chip').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    bdTimeframe = btn.dataset.value;
+  });
+});
+
+document.querySelectorAll('.bd-dur-chip').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.bd-dur-chip').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    const customInput = document.getElementById('bd-duration-custom');
+    if (btn.dataset.value === 'custom') {
+      customInput.style.display = 'block';
+      customInput.focus();
+      bdDuration = null; // wait for the user to type a value
+    } else {
+      customInput.style.display = 'none';
+      bdDuration = parseInt(btn.dataset.value, 10);
+    }
+  });
+});
+const bdCustomImput =
+document.getElementById('bd-duration-custom')
+if (bdCustomImput){
+    bdCustomImput.addEventListener('input', function() {
+const val = parseInt(this.value, 10);
+bdDuration = isNaN(val) ? null : val;
+});
+}
+
+function submitBrainDump() {
+  const input = document.getElementById('brain-dump-input');
+  const title = input.value.trim();
+  if (!title) return;
+
+  const deadlineField = document.getElementById('bd-deadline');
+  const deadline = deadlineField && deadlineField.value ? deadlineField.value : null;
+
+  fetch('/quick_add_task', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      title: title,
+      deadline: deadline,
+      timeframe: deadline ? null : bdTimeframe,
+      estimate_mins: bdDuration
+    })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.success) {
+      showBrainDumpCheck();
+      input.value = '';
+      input.focus();  // cursor stays active for the next thought
+    }
+  })
+  .catch(function() {
+    console.warn('Could not save task — check your connection.');
+  });
+}
+
+function showBrainDumpCheck() {
+  const check = document.getElementById('brain-dump-check');
+  check.style.opacity = '1';
+  setTimeout(function() {
+    check.style.opacity = '0';
+  }, 400);
+}
+</script>
 {% endblock %}
