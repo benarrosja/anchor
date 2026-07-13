@@ -203,8 +203,8 @@ def add_task():
         priority = int(request.form.get("priority", 2))
         estimate_mins = int(request.form.get ("estimate_mins", 25))#
         if not title:
-            flask ("Task title is required.", "danger")
-            return redirec(url_for("add_task"))
+            flash ("Task title is required.", "danger")
+            return redirect(url_for("add_task"))
 
         conn = get_connection()
         cursor = conn.cursor()
