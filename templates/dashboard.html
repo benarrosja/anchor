@@ -108,7 +108,11 @@
   color: #fff;
   border-color: #212529;
 }
+
 </style>
+
+<button type="button" class="btn btn-dark btn-sm mt-3" 
+onclick="submitBrainDump()">
 {% endblock %}
 
 
@@ -152,9 +156,11 @@
             <input id="bd-deadline" type="date" class="form-control form-control-sm mb-3" style="max-width:220px;">
             <p class="text-muted mb-1" style="font-size:0.8rem;">Timeframe</p>
             <div class="d-flex gap-2 flex-wrap mb-3">
-                <button type="button" class="bd-chip active" data-value="none">No rush</button>
+                 <button type="button" class="bd-chip" data-value="today">Today</button>
                 <button type="button" class="bd-chip" data-value="this_week">This week</button>
-                <button type="button" class="bd-chip" data-value="today">Today</button>
+                <button type="button" class="bd-chip active" data-value="none">No rush</button>
+
+               
             </div>
             <p class="text-muted mb-1" style="font-size:0.8rem;">How long will it take?</p>
             <div class="d-flex gap-2 flex-wrap align-items-center">
