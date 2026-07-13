@@ -111,16 +111,17 @@
 
 </style>
 
-<button type="button" class="btn btn-dark btn-sm mt-3" 
-onclick="submitBrainDump()">
+
 {% endblock %}
 
 
 {% block content %}
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <div>
-            <h2 class="fw-bold mb-1">Good to see you</h2>
+        <h2 class="fw-bold mb-1">Good to see you</h2>
+        <a href="{{ url_for('add_task') }}" class="btn btn-dark">+ Add Task</a>
+           </div>
+
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     {% for category, message in messages %}
@@ -131,14 +132,8 @@ onclick="submitBrainDump()">
                   {% endfor %}
                 {%endif %}
             {% endwith %}
-           </div>
- 
-
-           <a href="{{ url_for('add_task') }}" class="btn btn-dark">+ Add Task</a>
-           </div>
-
-
- <!-- Brain Dump: quick capture, always visible -->
+           
+ <!-- Brain Dump card: quick capture, always visible-  -->
     <div class="braindump-card">
         <p class="mb-2 fw-semibold">What's on your mind?</p>
         <div id="brain-dump-input-wrap">
@@ -148,16 +143,20 @@ onclick="submitBrainDump()">
                 onkeydown="if(event.key==='Enter'){event.preventDefault(); submitBrainDump();}">
             <span id="brain-dump-check">✓</span>
         </div>
+
+
         <button type="button" class="bd-details-toggle mt-2" onclick="toggleBrainDumpDetails()">
             <span id="bd-toggle-arrow">⌄</span> Add details (optional)
         </button>
+
+
         <div id="brain-dump-details">
             <p class="text-muted mb-1" style="font-size:0.8rem;">When is it due? (optional)</p>
             <input id="bd-deadline" type="date" class="form-control form-control-sm mb-3" style="max-width:220px;">
             <p class="text-muted mb-1" style="font-size:0.8rem;">Timeframe</p>
             <div class="d-flex gap-2 flex-wrap mb-3">
                  <button type="button" class="bd-chip" data-value="today">Today</button>
-                <button type="button" class="bd-chip" data-value="this_week">This week</button>
+                <button type="button" class="bd-chip" data-value="week">This week</button>
                 <button type="button" class="bd-chip active" data-value="none">No rush</button>
 
                
@@ -258,7 +257,10 @@ onclick="submitBrainDump()">
                         <button class="btn-icon-ghost" data-bs-toggle="dropdown">...</button>
                         <ul class="dropdown-menu dropdown-menu-small dropdown-menu-end">
                             <li><a class="dropdown-item" href="{{ url_for('edit_task', task_id=task.id) }}">Edit</a></li>
-                            <li><a class="dropdown-item text-danger" href="{{ url_for('delete_task', task_id=task.id) }}"
+                            <form method="POST" action="{{ url_for('delete_task', task_id=task.id) }}" class="d-inline"
+                                onsubmit="return confirm('Delete this task?');">
+                                <button type="submit" class="dropdown-item text-danger">Delete</button>
+                            </form>
                                    onclick="return confirm('Delete this task?');">Delete
                                 </a></li>
                         </ul>
@@ -278,9 +280,9 @@ onclick="submitBrainDump()">
                                 Start focus ({{ task.estimate_mins }}m)
                         </button>
 
-                        <a href="{{url_for('complete_task', task_id=task.id) }}"
-                         class="btn-icon-ghost ms-auto"> ✓ Mark Done
-                         </a>
+                       <form method="POST" action="{{ url_for('complete_task', task_id=task.id) }}" class="d-inline">
+                        <button type="submit" class="btn-icon-ghost">✓ Mark Done</button>
+                        </form>
                             
                     {% else %}
                         <span class="badge bg-success">Completed</span>

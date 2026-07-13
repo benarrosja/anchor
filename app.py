@@ -65,6 +65,7 @@ def register():
                 (email, hashed_password)
             )
             conn.commit()
+
             return redirect(url_for("login"))
 
         except Exception:
@@ -120,15 +121,17 @@ def set_energy():
     # persist to DB so it survices page reloads
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute(
+    try:
+        cursor.execute(
         "UPDATE users SET energy_level = %s WHERE id = %s",
         (energy, session["user_id"])
     )
-    conn.commit()
-    cursor.close()
-    conn.close()
-    labels = {1: "Exhausted ", 2: "Low ", 3: "Okay ", 4: "Good ", 5: "Energised "}
-    flash(f"Energy updated to {labels[energy]} Tasks re-ranked!", "success")
+        conn.commit()
+    finally:
+        cursor.close()
+        conn.close()
+        labels = {1: "Exhausted ", 2: "Low ", 3: "Okay ", 4: "Good ", 5: "Energised "}
+        flash(f"Energy updated to {labels[energy]} Tasks re-ranked!", "success")
 
     return redirect(url_for("dashboard"))
 
@@ -208,16 +211,19 @@ def add_task():
 
         conn = get_connection()
         cursor = conn.cursor()
-        cursor.execute(
+        try:
+            cursor.execute(
             """
             INSERT INTO tasks (user_id, title, deadline, priority, estimate_mins)
             VALUES (%s, %s, %s, %s, %s)
             """,
             (session["user_id"], title, deadline, priority, estimate_mins)
         )
-        conn.commit()
-        cursor.close()
-        conn.close()
+            conn.commit()
+        
+        finally:
+            cursor.close()
+            conn.close()
         
         return redirect(url_for("dashboard"))
 
@@ -229,7 +235,7 @@ def add_task():
 def all_tasks():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
-
+    
     cursor.execute(
         """
         SELECT *
@@ -239,6 +245,7 @@ def all_tasks():
         """,
         (session["user_id"],)
     )
+
     tasks = cursor.fetchall()
     
     cursor.close()
@@ -274,7 +281,7 @@ def all_tasks():
         )
 
 #====================complete task route=========================
-@app.route("/tasks/<int:task_id>/complete")
+@app.route("/tasks/<int:task_id>/complete", methods=["POST"])
 @login_required
 def complete_task(task_id):
     conn = get_connection()
@@ -293,7 +300,7 @@ def complete_task(task_id):
     return redirect (url_for("dashboard"))
 
 #===============Delete task route=================
-@app.route("/tasks/<int:task_id>/delete")
+@app.route("/tasks/<int:task_id>/delete", methods=["POST"])
 @login_required
 def delete_task(task_id):
     conn= get_connection()
@@ -393,7 +400,7 @@ def dashboard():
         (session["user_id"],)
     )
 
-    tasks = cursor.fetchall()
+    result = cursor.fetchone()
 
 # Query 2: get todya's total focus time ( before closing, e.g cursor/conn.close)
     cursor.execute( #sends the question to MysQL to get the total time spent on focus sessions for the logged-in user
@@ -408,20 +415,6 @@ def dashboard():
     result = cursor.fetchone() # grabs the single row answer ( there is only one, since SUM adds wvweything into one number)
     total_secs = result["total_secs"] or 0 # if no focus sesssions today, SUM returns None. this is a safety net,i.e. if user has no focus today SUM() returns null and Py crashes trying to maths on None. The "or 0" says: if empty, just treat it as 0.
     total_focus_minutes = total_secs // 60
-# Query 3: get distinct days user has focused ( for streak calculaton)
-    cursor.execute(
-        """
-        SELECT DISTINCT session_date
-        FROM focus_sessions
-        WHERE user_id = %s
-        ORDER BY session_date DESC
-        """,
-        (session["user_id"],)
-
-    )
-    result = cursor.fetchone()
-    total_secs= result["total_secs"] or 0
-    total_focus_minutes = total_secs // 60
 
     # query 3 : distinct foucs days for streak
     cursor.execute(
@@ -429,7 +422,7 @@ def dashboard():
         SELECT DISTINCT session_date
         FROM focus_sessions
         WHERE user_id = %s
-        ORDER BYsession_date DESC
+        ORDER BY session_date DESC
         """,
         (session["user_id"],)
     )
@@ -482,13 +475,14 @@ def edit_task(task_id):
         (task_id, session["user_id"])
     )
     task = cursor.fetchone()
+    cursor.close()
+    conn.close()
 
     if not task:
-        cursor.close()
-        conn.close()
         return redirect(url_for("dashboard"))
 
     if request.method == "POST":
+        conn = get_connection()
         title = request.form["title"].strip()
         deadline = request.form["deadline"] or None
         priority = int(request.form.get("priority", 2))
@@ -525,13 +519,15 @@ def log_focus():
     conn = get_connection()
     cursor = conn.cursor()
 
-    cursor.execute(
+    cursor.execute("SELECT id FROM tasks WHERE id = %s AND user_id = %s",
+               (task_id, session["user_id"]))
+    if not cursor.fetchone():
+        return ("", 403)
         """
         INSERT INTO focus_sessions (user_id, task_id, elapsed_secs, completed) 
         VALUES (%s, %s, %s, %s)
         """,
         (session["user_id"], task_id, elapsed_secs, 1)
-    )
     
 
     conn.commit()
