@@ -203,15 +203,16 @@
 </div>
 <p class="text-muted mb-3">Only the tasks most worth your attention are shown here.</p>
        
-    <!-- Stat cards: Todays Focus + Streak side by side -->
-    <div class="row g-3 mb-4">
-        <div class="col-6">
-            <div class="stat-card">
-                <p class="text-muted mb-1" style="font-size:0.75rem; letter-spacing:0.5px;">TODAY'S FOCUS</p>
-                <h2 class="fw-bold mb-0" style="color:#2e7d32;">
-                    {{ total_focus_minutes }}<span style="font-size:1rem;"> min</span>
-                </h2>
-            </div>
+    <!-- Stat cards: Todays Focus +  no penalty Streak side by side -->
+<div class="row g-3 mb-4">
+   <div class="col-6">
+    <div class="stat-card">
+  <p class="text-muted mb-1" style="font-size:0.75rem; letter-spacing:0.5px;">DAYS ACTIVE</p>
+  <h2 class="fw-bold mb-0" style="color:#e65100;">
+    {{ total_active_days }} <span style="font-size:1rem;">day{{ 's' if total_active_days != 1 else '' }}</span> {{ current_badge }}
+  </h2>
+  <p class="text-muted mb-0 mt-1" style="font-size:0.75rem;">{{ today_quote }}</p>
+</div>
         </div>
         <div class="col-6">
             <div class="stat-card">

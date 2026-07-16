@@ -422,34 +422,53 @@ def dashboard():
     # query 3 : distinct foucs days for streak
     cursor.execute(
         """
-        SELECT DISTINCT session_date
-        FROM focus_sessions
-        WHERE user_id = %s
-        ORDER BY session_date DESC
+        SELECT total_active_days, 
+        last_active_date 
+        FROM users WHERE id = %s
+    
         """,
-        (session["user_id"],)
-    )
-    focus_days = [row["session_date"] for row in cursor.fetchall()]
+        (session["user_id"],))
+    user_row = cursor.fetchone()
+    total_active_days = user_row["total_active_days"] or 0
+    last_active_date = user_row["last_active_date"]
+    
+    today = date.today()
+    if last_active_date != today:
+        total_active_days += 1
+        conn2 = get_connection()
+        cur2 = conn2.cursor()
+        cur2.execute(
+            "UPDATE users SET total_active_days = %s, last_active_date = %s WHERE id = %s",
+            (total_active_days, today, session["user_id"])
+        )
+        #Now I can close - after all queries are done
+        conn2.commit()
+        cur2.close()
+        conn2.close()
 
-#Now I can close - after all queries are done
-    cursor.close()
-    conn.close()
-# adding the streak calculation
-       
-    streak = 0 
-    expected_day = date.today()
+    # Badge milestones — never resets, only grows to motivate ADHD user
+    BADGES = [(1, "🌱"), (3, "🌿"), (7, "🔥"), (14, "⭐"), (30, "🏆"), (60, "💎"), (100, "👑")]
+    current_badge = "🌱"
+    for days_required, emoji in BADGES:
+        if total_active_days >= days_required:
+            current_badge = emoji
 
-    for day in focus_days:
-        if day == expected_day:
-            streak += 1
-            expected_day = expected_day - timedelta (days=1)
-        else:
-            break
+import random
+ENCOURAGEMENT_QUOTES = [
+    "Progress, not perfection.",
+    "Small steps still move you forward.",
+    "You showed up today — that counts.",
+    "Consistency beats intensity.",
+    "One task at a time is enough.",
+    "Find motivation on what you do and you will never feel tired again.",
+    "It is all about the jorney not the destination",
+]
+today_quote = random.choice(ENCOURAGEMENT_QUOTES)
 
 # Score every task, then sort, then slice to top 3
 #Raking is : urgency (exponential decay), importance (priority 1–3), and energy-fit all feeding into one real score, sorted, then sliced to 3 
-    energy_level = session.get("energy_level", 3 ) # default is 3
-    for t in tasks:
+energy_level = session.get("energy_level", 3 ) # default is 3
+   for t in tasks:
         t["score"] = compute_priority_score(t, energy_level=energy_level)
     tasks.sort(key=lambda t: (-t["score"], t["id"])) # sort by score descending, then by id
     tasks = tasks[:3]   # slice after scoring, not before
@@ -458,7 +477,10 @@ def dashboard():
         "dashboard.html",
         tasks=tasks,
         total_focus_minutes=total_focus_minutes,
-        streak=streak
+        total_active_days= total_active_days,
+        current_badge=  current_badge,
+        today_quote= today_quote,
+
     )
 
 
