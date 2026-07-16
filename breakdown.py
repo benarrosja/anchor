@@ -23,7 +23,7 @@ def _get_client():
 
 #=========== prompting=======
 
-def _building_prompt(title: str, deadline: str, priority: int, estimate_mins: int, energy_level: int) -> str:
+def _building_prompt(title: str, details: str, deadline: str, priority: int, estimate_mins: int, energy_level: int) -> str:
     """
     Constructs an ADHD-Aware prompt that instructs Gemini to return a strict JSON array of micro-steps - no prose, no markdown.
 
@@ -44,13 +44,14 @@ def _building_prompt(title: str, deadline: str, priority: int, estimate_mins: in
     else:
         step_count = 5
         max_mins = 15
+    details_str = f'\n- Extra details from user: "{details}"' if details else ""
     deadline_str = f"due {deadline}" if deadline else " no deadline set"
     priority_str = {1: "low", 2: "medium", 3: "high"}.get(priority, "medium")
 
     prompt = f"""
 You are an ADHD productivity coach. A user is stuck on a task and needs it broken into concrete, specific micro-steps they can start RIGHT NOW.
 Task details:
-- Title: "{title}"
+- Title: "{title}" {details_str}
 - Deadline: {deadline_str}
 - Priority: {priority_str}
 - Estimated total time: {estimate_mins} minutes
@@ -129,6 +130,7 @@ def _fallback_steps(title: str, energy_level: int) -> list[dict]:
 # ======== Public API - the only function app.py should import
 
 def get_task_breakdown(title: str,
+                       details: str,
                        deadline: str | None,
                        priority: int,
                        estimate_mins: int,
@@ -145,7 +147,7 @@ def get_task_breakdown(title: str,
 
     Never raises — always returns a usable response.
     """
-    prompt = _building_prompt(title, deadline, priority, estimate_mins, energy_level)
+    prompt = _building_prompt(title, details, deadline, priority, estimate_mins, energy_level)
 
     try:
         client = _get_client()

@@ -202,6 +202,7 @@ def quick_add_task():
 def add_task():
     if request.method == "POST":
         title = request.form.get("title", "").strip()
+        details = request.form.get("details", "").strip() or None
         deadline = request.form.get("deadline") or None
         priority = int(request.form.get("priority", 2))
         estimate_mins = int(request.form.get ("estimate_mins", 25))#
@@ -355,13 +356,15 @@ def task_breakdown(task_id):
     data = request.get_json(force=True)
 
     title = data.get("title", "this task")
+    details =  data.get("details") or None
     deadline = data.get("deadline") or None
     priority = int(data.get("priority", 2))
     estimate_mins = int(data.get("estimate_mins", 25))
-    energy_level = session.get("energy_level", 3)   # from session set by /set_energy
+    energy_level = session.get("energy_level", 3)
 
     result = get_task_breakdown(
         title=title,
+        details=details,
         deadline=deadline,
         priority=priority,
         estimate_mins=estimate_mins,
@@ -468,7 +471,7 @@ def edit_task(task_id):
     # Fetch the task first
     cursor.execute(
         """
-        SELECT id, title, deadline, priority, estimate_mins
+        SELECT id, title, deadline, priority, estimate_mins, details
         FROM tasks
         WHERE id= %s AND user_id= %s
         """,
@@ -484,6 +487,7 @@ def edit_task(task_id):
     if request.method == "POST":
         conn = get_connection()
         title = request.form["title"].strip()
+        details = request.form.get("details", "").strip() or None
         deadline = request.form["deadline"] or None
         priority = int(request.form.get("priority", 2))
         estimate_mins = int(request.form.get("estimate_mins", 25))
@@ -491,7 +495,7 @@ def edit_task(task_id):
         cursor.execute(
             """
             UPDATE tasks
-            SET title=%s, deadline=%s, priority=%s, estimate_mins=%s
+            SET title=%s, deadline=%s, priority=%s, estimate_mins=%s, details=%s
             WHERE id=%s AND user_id=%s
             """,
             (title, deadline, priority, estimate_mins, task_id, session["user_id"])

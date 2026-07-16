@@ -504,11 +504,12 @@ function deleteSubtask(taskId, idx) {
     renderSubtasks(taskId);
 }
 // === Focus mode entry exit========
-function startFocusTimer(taskId, taskTitle, estimateMins, taskDeadline, taskPriority) {
+function startFocusTimer(taskId, taskTitle,currentTaskDetails, estimateMins, taskDeadline, taskPriority) {
     if (focusInterval) clearInterval(focusInterval);
 
     focusTaskId = taskId;
     currentTaskTitle= taskTitle;
+    currentTaskDetails = taskDetails;
     currentTaskEstimate= estimateMins;
     currentTaskPriority= taskPriority;
     currentTaskDeadline= taskDeadline;
@@ -574,9 +575,9 @@ function logFocusSession(taskId, estimateMins) {
 // ==== Im stuck breakdown - inside focus mode ===
 function openBreakdownForCurrentTask() {
   if (!focusTaskId) return;
-   getBreakdown(focusTaskId, currentTaskTitle, currentTaskDeadline, currentTaskPriority, currentTaskEstimate);
+   getBreakdown(focusTaskId, currentTaskTitle, currentTaskDetails, currentTaskDeadline, currentTaskPriority, currentTaskEstimate);
 }
-function getBreakdown(taskId, title, deadline, priority, estimateMins) {
+function getBreakdown(taskId, title,taskDetails, deadline, priority, estimateMins) {
     const box = document.getElementById('breakdown-box');
     const steps = document.getElementById('breakdown-steps');
     const source = document.getElementById('breakdown-source');
@@ -590,6 +591,7 @@ function getBreakdown(taskId, title, deadline, priority, estimateMins) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             title: title, 
+            details:details,
             deadline: deadline,
             priority: priority, 
             estimate_mins: estimateMins

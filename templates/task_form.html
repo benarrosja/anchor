@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 {% block title %}{{ "Edit Task" if task else "Add Task"}}{% endblock %}
 
+<label class="form-label fw-semibold">Any extra details? (AI will breakdown tasks based on that)</label>
+<textarea class="form-control mb-3" id="details" name="details" rows="3"
+          placeholder="e.g. This report needs 3 sections and APA references">{{ task.details if task and task.details else '' }}</textarea>
 {% block content %}
 <div class="container mt-5" style="max-width: 520px;">
     <h2 class="fw-bold mb-1"> {{ "Edit task" if task else  "Add a task" }} </h2>
