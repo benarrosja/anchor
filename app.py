@@ -13,6 +13,7 @@ from db import get_connection
 from priority import compute_priority_score 
 from datetime import datetime
 from datetime import date
+import math
 from datetime import date, timedelta
 import json
 
@@ -453,8 +454,8 @@ def dashboard():
         if total_active_days >= days_required:
             current_badge = emoji
 
-import random
-ENCOURAGEMENT_QUOTES = [
+    import random
+    ENCOURAGEMENT_QUOTES = [
     "Progress, not perfection.",
     "Small steps still move you forward.",
     "You showed up today — that counts.",
@@ -462,13 +463,13 @@ ENCOURAGEMENT_QUOTES = [
     "One task at a time is enough.",
     "Find motivation on what you do and you will never feel tired again.",
     "It is all about the jorney not the destination",
-]
-today_quote = random.choice(ENCOURAGEMENT_QUOTES)
+    ]
+    today_quote = random.choice(ENCOURAGEMENT_QUOTES)
 
 # Score every task, then sort, then slice to top 3
 #Raking is : urgency (exponential decay), importance (priority 1–3), and energy-fit all feeding into one real score, sorted, then sliced to 3 
-energy_level = session.get("energy_level", 3 ) # default is 3
-   for t in tasks:
+    energy_level = session.get("energy_level", 3 ) # default is 3
+    for t in tasks:
         t["score"] = compute_priority_score(t, energy_level=energy_level)
     tasks.sort(key=lambda t: (-t["score"], t["id"])) # sort by score descending, then by id
     tasks = tasks[:3]   # slice after scoring, not before
