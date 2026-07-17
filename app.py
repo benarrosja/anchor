@@ -12,8 +12,6 @@ from functools import wraps
 from db import get_connection
 from priority import compute_priority_score 
 from datetime import datetime
-from datetime import date
-import math
 from datetime import date, timedelta
 import json
 
@@ -470,7 +468,7 @@ def dashboard():
 #Raking is : urgency (exponential decay), importance (priority 1–3), and energy-fit all feeding into one real score, sorted, then sliced to 3 
     energy_level = session.get("energy_level", 3 ) # default is 3
     for t in tasks:
-        t["score"] = compute_priority_score(t, energy_level=energy_level)
+        t["score"] = compute_priority_score(t, energy_level=energy_level) or 0.0 # The or 0.0 ensures that even in some unforeseen edge case, t["score"] is always a real number before .sort() runs
     tasks.sort(key=lambda t: (-t["score"], t["id"])) # sort by score descending, then by id
     tasks = tasks[:3]   # slice after scoring, not before
 
