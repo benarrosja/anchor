@@ -6,7 +6,6 @@ from datetime import date, timedelta
 from dotenv import load_dotenv
 
 load_dotenv() # must run before reading any os.getenv
-gemini_client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 from breakdown import get_task_breakdown
 from werkzeug.security import generate_password_hash, check_password_hash

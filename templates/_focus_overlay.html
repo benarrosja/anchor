@@ -1,0 +1,91 @@
+<div id="focus-overlay" class="focus-overlay">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <span class="text-muted" style="font-size:0.75rem; letter-spacing:0.8px;"> FOCUS MODE</span>
+    <button id="fo-exit-btn" class="btn btn-sm btn-outline-secondary">
+      Exit focus mode
+    </button>
+  </div>
+
+
+  <div class="text-center mb-4">
+    <h3 id="fo-title" class="fw-bold mb-1" style="color:#1a1a2e;"></h3>
+    <p id="fo-meta" class="text-muted mb-0" style="font-size:0.85rem;"></p>
+  </div>
+
+  <div class="d-flex justify-content-center mb-4">
+    <div style="position:relative; width:170px; height:170px;">
+      <svg viewBox="0 0 200 200" style="width:100%;height:100%;transform:rotate(-90deg);">
+        <circle cx="100" cy="100" r="88" fill="none" stroke="#eeeeee" stroke-width="12"></circle>
+        <circle cx="100" cy="100" r="88"
+                fill="none" stroke="#4361ee" stroke-width="12"
+                stroke-linecap="round"
+                stroke-dasharray="552.92"
+                stroke-dashoffset="0"
+                id="fo-ring"
+                style="transition: stroke-dashoffset 1s linear, stroke 0.4s ease;">
+        </circle>
+      </svg>
+      <div id="fo-time"
+           style="position:absolute; top:50%; left:50%;
+                  transform:translate(-50%,-50%);
+                  font-size:2rem; font-weight:700;
+                  color:#1a1a2e; letter-spacing:-1px;">
+            00:00
+      </div>
+    </div>
+  </div>
+
+
+  <div style="max-width:520px; margin:0 auto;" class="mb-3">
+    <label class="fw-semibold mb-1 d-block" style="font-size:0.85rem; color:#6c757d;">
+      Any extra details?
+    </label>
+    
+    <textarea id="fo-details-input" class="form-control form-control-sm" rows="2"
+              placeholder="e.g. This report needs 3 sections and Harvard references"></textarea>
+
+    <p id="fo-details-warning" class="text-danger mb-0 mt-1" style="display:none; font-size:0.8rem;">
+      Add a few details about this task first - the AI needs context to give a useful breakdown.
+    </p>
+  
+</div>
+
+  <div class="text-center mb-3">
+    <button id="fo-stuck-btn" class="btn btn-sm btn-outline-primary">I'm stuck - suggest micro-steps</button>
+  </div>
+
+  <div style="max-width:520px; margin:0 auto;">
+    <p class="fw-semibold mb-2" style="font-size:0.85rem; color:#6c757d; letter-spacing:0.5px;">MY SUBTASKS</p>
+    <p class="text-muted mb-2" style="font-size:0.8rem;">
+      Break the task into tiny, 3-10 minute actions. Example: "Open doc", "Write heading", "Outline 3 bullets".
+    </p>
+    
+    <ul id="fo-subtask-list" class="list-unstyled mb-3"></ul>
+
+    <div class="d-flex gap-2 mb-4">
+      <input id="fo-subtask-input" type="text"
+             class="form-control form-control-sm"
+             placeholder="Add a subtask...">
+      <button id="fo-add-subtask-btn" class="btn btn-sm btn-outline-primary">Add</button>
+    </div>
+
+    <div class="d-flex justify-content-center">
+      <button type="button" id="fo-complete-link" class="btn btn-success px-4">
+        Mark task complete
+      </button>
+    </div>
+  </div>
+
+  <div id="breakdown-box" class="card border-0 shadow-sm">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <p class="text-muted mb-0" style="font-size:0.75rem;letter-spacing:0.5px;">MICRO-STEPS</p>
+        <button id="fo-breakdown-close-btn" class="btn-close btn-sm"></button>
+      </div>
+     
+      <div id="breakdown-steps"></div>
+      
+      <p id="breakdown-source" class="text-muted mb-0 mt-2" style="font-size:0.7rem;"></p>
+    </div>
+  </div>
+</div>
