@@ -7,7 +7,7 @@ import os
 import re
 from google import genai
 
-# ========Gemini client ====
+#========Gemini client ====
 _client = None  # lazy singleton.Avoids re-initialising on every call 
 
 def _get_client():
@@ -25,20 +25,20 @@ def _get_client():
 
 def _building_prompt(title: str, details: str, deadline: str, priority: int, estimate_mins: int, energy_level: int) -> str:
     """
-    Constructs an ADHD-Aware prompt that instructs Gemini to return a strict JSON array of micro-steps - no prose, no markdown.
+    Constructs an ADHD-aware prompt that instructs Gemini to return a strict JSON array of micro-steps - no prose, no markdown.
 
     Energy level shapes step size:
-    1-2 (low) -> 3 tiniy steps, each < 5 min
-    3 (okay) -> 4 steps, each <10
+    1-2 (low) -> 3 tiny steps, each < 5 min
+    3 (okay) -> 4 steps, each < 10
     4-5 (high) -> 5 steps, each < 15 min
     """
-    energy_labels = {1: "exhauted", 2: "low", 3: "okay", 4: "good", 5: "enegised"}
+    energy_labels = {1: "exhausted", 2: "low", 3: "okay", 4: "good", 5: "energised"}
     energy_word = energy_labels.get(energy_level, "okay")
 
     if energy_level <=2:
-        step_count =3
+        step_count = 3
         max_mins = 5
-    elif energy_level ==3:
+    elif energy_level == 3:
         step_count = 4
         max_mins = 10
     else:
@@ -55,7 +55,7 @@ Task details:
 - Deadline: {deadline_str}
 - Priority: {priority_str}
 - Estimated total time: {estimate_mins} minutes
--User's current energy: {energy_word} (level {energy_level}/5)
+- User's current energy: {energy_word} (level {energy_level}/5)
 
 Rules:
 1. Return ONLY a valid JSON array. No markdown, no explanation, no prose.
@@ -73,7 +73,7 @@ Return format (strictly):
 """.strip()
 
     return prompt
-# ==========JSON validation and Parsing ===========================
+# ==========JSON validation/ parsing====
 
 def _parse_steps(raw_text: str) -> list[dict]:
     """
@@ -94,14 +94,10 @@ def _parse_steps(raw_text: str) -> list[dict]:
     if not isinstance(steps, list) or len(steps) == 0:
         raise ValueError("Parsed result is not a non-empty list.")
 
-    # Validate each step has the required keys
-    for s in steps:
+    for idx, s in enumerate(steps):
         if not isinstance(s, dict):
             raise ValueError(f"Step is not a dict: {s}")
-        if "action" not in s:
-            raise ValueError(f"Step missing 'action' key: {s}")
-        # Ensure step and duration_mins exist with safe defaults
-        s.setdefault("step", steps.index(s) + 1)
+        s.setdefault("step", idx + 1)
         s.setdefault("duration_mins", 5)
 
     return steps
@@ -111,7 +107,7 @@ def _parse_steps(raw_text: str) -> list[dict]:
 def _fallback_steps(title: str, energy_level: int) -> list[dict]:
     """
     Returns generic but honest micro-steps when Gemini is unavailable.
-    Energy-aware: low energy → fewer, smaller steps.
+    Energy-aware: low energy -> fewer, smaller steps.
     """
     if energy_level <= 2:
         return [
@@ -120,7 +116,7 @@ def _fallback_steps(title: str, energy_level: int) -> list[dict]:
             {"step": 3, "action": "Set a 5-minute timer and do just the first thing you wrote.", "duration_mins": 5},
         ]
     else:
-        return [
+        return[
             {"step": 1, "action": f"Re-read the task title '{title}' and write what 'done' looks like.", "duration_mins": 2},
             {"step": 2, "action":"Identify the single blocking question or resource you need.", "duration_mins": 3},
             {"step": 3, "action": "Do the smallest possible physical action (open a doc, write a heading, send one message).", "duration_mins": 5},
@@ -130,25 +126,16 @@ def _fallback_steps(title: str, energy_level: int) -> list[dict]:
 # ======== Public API - the only function app.py should import
 
 def get_task_breakdown(title: str,
-                       details: str,
-                       deadline: str | None,
-                       priority: int,
-                       estimate_mins: int,
-                       energy_level: int = 3) -> dict:
+                details: str,
+                deadline: str | None,
+                priority: int,
+                estimate_mins: int,
+                energy_level: int = 3) -> dict:
     """
     Main entry point called by the Flask route.
-
-    Returns a dict:
-    {
-        "steps": [ {"step": 1, "action": "...", "duration_mins": 5}, ... ],
-        "source": "gemini" | "fallback",
-        "error": None | "short error description"
-    }
-
     Never raises — always returns a usable response.
     """
     prompt = _building_prompt(title, details, deadline, priority, estimate_mins, energy_level)
-
     try:
         client = _get_client()
         response = client.models.generate_content(
@@ -165,3 +152,6 @@ def get_task_breakdown(title: str,
         print(f"[breakdown.py] Gemini error: {e}")
         fallback = _fallback_steps(title, energy_level)
         return {"steps": fallback, "source": "fallback", "error": str(e)}
+
+
+

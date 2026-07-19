@@ -1,52 +1,29 @@
 {% extends "base.html" %}
 {% block title %}Dashboard{% endblock %}
-
 {% block head %}
-<style>
-  .stat-card {
-    padding: 16px;
-    border-radius: 18px;
-    background: #ffffff;
-    border: 1px solid #eceef5;
-    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
-    height: 100%;
-  }
 
-  .energy-card {
-    background: #ffffff;
-    border-radius: 16px;
-    border: 1px solid #eceef5;
-    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+  <style>
+.stat-panel {
+  background: #ffffff;
+  border-radius: 18px;
+  border: 1px solid #eceef5;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+  padding: 24px 24px;
   }
-
-  .focus-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: #f5f7ff;
-    z-index: 2000;
-    overflow-y: auto;
-    padding: 24px 16px 40px;
-  }
-
-  .focus-overlay.show {
-    display: block;
-  }
-
-  .fo-subtask-done {
-    text-decoration: line-through;
-    color: #9ca3af;
-    transition: all 0.25s ease;
-  }
-
-  #breakdown-box {
-    display: none;
-    border-radius: 14px;
-    background: #eef3fb;
-    max-width: 520px;
-    margin: 24px auto 0;
-  }
-  /* Brain Dump  */
+.stat-label { font-size: 0.75rem; letter-spacing: 0.5px; color: #6b7280; margin-bottom: 4px; }
+.stat-number { color: #e65100; margin-bottom: 0; }
+.stat-unit { font-size: 1rem; }
+.stat-divider { width: 1px; align-self: stretch; background: #eceef5; }
+.stat-line { display: flex; align-items: center; gap: 10px; font-size: 0.95rem; color: #374151; }
+.stat-line + .stat-line { margin-top: 10px; }
+.stat-icon { font-size: 1.15rem; line-height: 1; flex-shrink: 0; }
+.stat-quote { font-style: italic; }
+.energy-card {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #eceef5;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+}
 .braindump-card {
   background: #fafafa;
   border-radius: 16px;
@@ -56,136 +33,130 @@
   position: relative;
 }
 
-#brain-dump-input {
-  padding: 14px 44px 14px 16px;
-  border-radius: 12px;
-  font-size: 1.05rem;
-  border: 1px solid #ddd;
-  width: 100%;
-}
-
-#brain-dump-check {
-  position: absolute;
-  right: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  opacity: 0;
-  transition: opacity 0.4s ease;
-  font-size: 1.3rem;
-  color: #2e7d32;
-  pointer-events: none;
-}
-
-.bd-details-toggle {
-  text-decoration: none;
-  font-size: 0.85rem;
-  color: #6c757d;
-  padding-left: 0;
-  background: none;
-  border: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-#brain-dump-details{
+  #brain-dump-input {
+    padding: 14px 44px 14px 16px;
+    border-radius: 12px;
+    font-size: 1.05rem;
+    border: 1px solid #ddd;
+    width: 100%;
+  }
+  #brain-dump-check {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    font-size: 1.3rem;
+    color: #2e7d32;
+    pointer-events: none;
+  }
+  .bd-details-toggle {
+    text-decoration: none;
+    font-size: 0.85rem;
+    color: #6c757d;
+    padding-left: 0;
+    background: none;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  #brain-dump-details{
     display: none;
     margin-top: 14px;
-}
-
-.bd-chip, .bd-dur-chip {
-  background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 999px;
-  padding: 6px 14px;
-  font-size: 0.85rem;
-  color: #212529;
-}
-
-
-.bd-chip.active,
-.bd-dur-chip.active{
-  background: #212529;
-  color: #fff;
-  border-color: #212529;
-}
-
+  }
+  .bd-chip, .bd-dur-chip {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 0.85rem;
+    color: #212529;
+  }
+  .bd-chip.active,
+  .bd-dur-chip.active{
+    background: #212529;
+    color: #fff;
+    border-color: #212529;
+  }
 </style>
-
-
 {% endblock %}
-
-
 {% block content %}
 <div class="container">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="fw-bold mb-1">Good to see you</h2>
-        <a href="{{ url_for('add_task') }}" class="btn btn-dark">+ Add Task</a>
-           </div>
-
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} alert-dismissible fade show py-2 px-3 mt-2" role="alert">
-                        {{ message}}
-                        <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert"></button>
-                    </div>
-                  {% endfor %}
-                {%endif %}
-            {% endwith %}
-           
- <!-- Brain Dump card: quick capture, always visible-  -->
-    <div class="braindump-card">
-        <p class="mb-2 fw-semibold">What's on your mind?</p>
-        <div id="brain-dump-input-wrap">
-            <input id="brain-dump-input" type="text" class="form-control"
-                placeholder="e.g. Write the instruction paragraph"
-                autocomplete="off"
-                onkeydown="if(event.key==='Enter'){event.preventDefault(); submitBrainDump();}">
-            <span id="brain-dump-check">✓</span>
-        </div>
-
-
-        <button type="button" class="bd-details-toggle mt-2" onclick="toggleBrainDumpDetails()">
-            <span id="bd-toggle-arrow">⌄</span> Add details (optional)
-        </button>
-
-
-        <div id="brain-dump-details">
-            <p class="text-muted mb-1" style="font-size:0.8rem;">When is it due? (optional)</p>
-            <input id="bd-deadline" type="date" class="form-control form-control-sm mb-3" style="max-width:220px;">
-            <p class="text-muted mb-1" style="font-size:0.8rem;">Timeframe</p>
-            <div class="d-flex gap-2 flex-wrap mb-3">
-                 <button type="button" class="bd-chip" data-value="today">Today</button>
-                <button type="button" class="bd-chip" data-value="week">This week</button>
-                <button type="button" class="bd-chip active" data-value="none">No rush</button>
-
-               
-            </div>
-            <p class="text-muted mb-1" style="font-size:0.8rem;">How long will it take?</p>
-            <div class="d-flex gap-2 flex-wrap align-items-center">
-                <button type="button" class="bd-dur-chip" data-value="5">5 min</button>
-                <button type="button" class="bd-dur-chip" data-value="15">15 min</button>
-                <button type="button" class="bd-dur-chip" data-value="25">25 min</button>
-                <button type="button" class="bd-dur-chip" data-value="45">45 min</button>
-                <button type="button" class="bd-dur-chip" data-value="custom">Custom</button>
-                <input id="bd-duration-custom" type="number" min="1"
-                    class="form-control form-control-sm" style="display:none; max-width:100px;"
-                    placeholder="mins">
-            </div>
-        </div>
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="fw-bold mb-1">Good to see you</h2>
+  </div>
+ 
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show py-2 px-3 mt-2" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert"></button>
+      </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+ 
+  <!-- Brain Dump card: quick capture, always visible -->
+  <div class="braindump-card">
+    <p class="mb-2 fw-semibold">What's on your mind?</p>
+    <div id="brain-dump-input-wrap">
+      <input id="brain-dump-input" type="text" class="form-control"
+        placeholder="e.g. Write the instruction paragraph"
+        autocomplete="off"
+    <span id="brain-dump-check">Done</span>
     </div>
-
- <!-- Energy Check-in Widget -->
-
- <div class="energy-card p-3 mb-4">
+    <button type="button" id="bd-toggle-btn"
+    class="bd-details-toggle mt-2">v</span> Add details (optional)
+    </button>
+ 
+    <div id="brain-dump-details">
+        <p class="text-muted mb-1" style="font-size:0.8rem;">Any extra details? (optional - AI uses this to breakdown tasks)</p>
+      <textarea id="bd-details" class="form-control form-control-sm mb-3" rows="2"
+                placeholder="e.g. This report needs 3 sections and Harvard references"></textarea>
+        <p class="text-muted mb-1" style="font-size:0.8rem;">When is it due? (optional)</p>
+      <input id="bd-deadline" type="date" class="form-control form-control-sm mb-3" style="max-width:220px;">
+ 
+      <p class="text-muted mb-1" style="font-size:0.8rem;">Timeframe</p>
+      <div class="d-flex gap-2 flex-wrap mb-3">
+        <button type="button" class="bd-chip" data-value="today">Now</button>
+        <button type="button" class="bd-chip" data-value="week">This week</button>
+        <button type="button" class="bd-chip active" data-value="none">No rush</button>
+      </div>
+ 
+      <p class="text-muted mb-1" style="font-size:0.8rem;">How long will it take?</p>
+      <!-- BUG FIX: the "+ Add task" button used to be nested inside this same
+           flex row, ahead of the custom-minutes input — so the custom input
+           only ever appeared to the right of / after the submit button
+           instead of alongside the other duration chips. Moved the custom
+           input up next to its sibling chips and the submit button to its
+           own row below, matching the visual grouping the other sections use. -->
+      <div class="d-flex gap-2 flex-wrap align-items-center">
+        <button type="button" class="bd-dur-chip" data-value="5">5 min</button>
+        <button type="button" class="bd-dur-chip" data-value="15">15 min</button>
+        <button type="button" class="bd-dur-chip" data-value="25">25 min</button>
+        <button type="button" class="bd-dur-chip" data-value="45">45 min</button>
+        <button type="button" class="bd-dur-chip" data-value="custom">Custom</button>
+        <input id="bd-duration-custom" type="number" min="1"
+          class="form-control form-control-sm" style="display:none; max-width:100px;"
+          placeholder="mins">
+     </div>
+      <button type="button" id="bd-submit-btn" class="btn btn-dark btn-sm mt-3"> + Add task </button>
+    </div>
+  </div>
+ 
+  <!-- Energy Check-in Widget -->
+  <div class="energy-card p-3 mb-4">
     <p class="mb-2 fw-semibold">⚡ How's your energy today?</p>
     <form method="POST" action="{{ url_for('set_energy') }}" class="d-flex gap-2 flex-wrap">
       {% for level, label, emoji in [
-          (1,"Exhausted", "😴"),
-          (2, "Low", "😕"),
-          (3,"Okay", "😐"),
-          (4, "Good", "😊"),
-          (5, "Energised","🚀")
+        (1,"Exhausted", "😴"),
+        (2, "Low", "😕"),
+        (3,"Okay", "😐"),
+        (4, "Good", "😊"),
+        (5, "Energised","🚀")
       ] %}
       <button
         type="submit"
@@ -197,512 +168,110 @@
       {% endfor %}
     </form>
   </div>
+ 
   <div class="d-flex justify-content-between align-items-center mb-2">
-    <h4 class="fw-bold mb-0">Top 3 tasks </h4>
-    <a href="{{ url_for('all_tasks') }}" class="text-decoration-none"> View all</a>
-</div>
-<p class="text-muted mb-3">Only the tasks most worth your attention are shown here.</p>
-       
-    <!-- Stat cards: Todays Focus +  no penalty Streak side by side -->
-<div class="row g-3 mb-4">
-   <div class="col-6">
-    <div class="stat-card">
-  <p class="text-muted mb-1" style="font-size:0.75rem; letter-spacing:0.5px;">DAYS ACTIVE</p>
-  <h2 class="fw-bold mb-0" style="color:#e65100;">
-    {{ total_active_days }} <span style="font-size:1rem;">day{{ 's' if total_active_days != 1 else '' }}</span> {{ current_badge }}
-  </h2>
-  <p class="text-muted mb-0 mt-1" style="font-size:0.75rem;">{{ today_quote }}</p>
-</div>
-        </div>
-        <div class="col-6">
-            <div class="stat-card">
-                <p class="text-muted mb-1" style="font-size:0.75rem; letter-spacing:0.5px;">STREAK</p>
-                <h2 class="fw-bold mb-0" style="color:#e65100;">
-                    {{ streak }} <span style="font-size:1rem;">day{{ 's' if streak != 1 else '' }}</span> &#128293;
-                </h2>
-            </div>
-        </div>
-    </div>
-
-   
-<!-- task list  with Staart focus  and no Im stuck button --> 
-    {% if tasks %}
-    <div class="task-list">
-           {% for task in tasks %}
-            {% if task.priority == 3 %}
-                {% set priority_class = 'priority-high' %}
-                {% set priority_label = 'High' %}
-            {% elif task.priority == 2 %}
-                {% set priority_class= 'priority-medium' %}
-                {% set priority_label = 'Medium' %}
-            {% else %}
-                {% set priority_class = 'priority-low' %}
-                {% set priority_label= 'Low' %}
-            {% endif %}
-
-            <div class="task-card {{ priority_class }} {% if task.is_complete %}opacity-50{% endif %}">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <div class="task-title {% if task.is_complete %}text-decoration-line-through{% endif %}">
-                            {{ task.title }}
-                        </div>
-                        <div class="task-meta">
-                            {{ priority_label }}
-                            {% if task.deadline %} · Due {{ task.deadline }}{% endif %}
-                            · {{ task.estimate_mins }} min
-                        </div>
-                    </div>
-
-                    <!-- Overflow menu: Edit / Delete tucked away -->
-                    <div class="dropdown">
-                        <button class="btn-icon-ghost" data-bs-toggle="dropdown">...</button>
-                        <ul class="dropdown-menu dropdown-menu-small dropdown-menu-end">
-                            <li><a class="dropdown-item" href="{{ url_for('edit_task', task_id=task.id) }}">Edit</a></li>
-                            <form method="POST" action="{{ url_for('delete_task', task_id=task.id) }}" class="d-inline"
-                                onsubmit="return confirm('Delete this task?');">
-                                <button type="submit" class="dropdown-item text-danger">Delete</button>
-                            </form>
-                                   onclick="return confirm('Delete this task?');">Delete
-                                </a></li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="task-actions mt-2">
-                    {% if not task.is_complete %}
-                        <button class="btn-primary-action"
-                            onclick="startFocusTimer(
-                                {{ task.id }},
-                                '{{ task.title|escape }}',
-                                 {{ task.estimate_mins }}, 
-                                 '{{ task.deadline or '' }}',
-                                 {{ task.priority }}
-                                 )">
-                                Start focus ({{ task.estimate_mins }}m)
-                        </button>
-
-                       <form method="POST" action="{{ url_for('complete_task', task_id=task.id) }}" class="d-inline">
-                        <button type="submit" class="btn-icon-ghost">✓ Mark Done</button>
-                        </form>
-                            
-                    {% else %}
-                        <span class="badge bg-success">Completed</span>
-                    {% endif %}
-                </div>
-            </div>
-        {% endfor %}
-    </div>
-    {% else %}
-        <p class="mt-4 text-muted">No tasks yet. Start by adding one.</p>
-    {% endif %}
-</div>
-
-    <!-- Focus mode overlay x exit focus mode -->
-<div id="focus-overlay" class="focus-overlay">
-    <!-- Top bar -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <span class="text-muted" style="font-size:0.75rem; letter-spacing:0.8px;">FOCUS MODE</span>
-        <button class="btn btn-sm btn-outline-secondary" onclick="exitFocusMode()">
-            ✕ Exit focus mode
-        </button>
-    </div>
-
-    <!-- Task title + meta -->
-    <div class="text-center mb-4">
-        <h3 id="fo-title" class="fw-bold mb-1" style="color:#1a1a2e;"></h3>
-        <p  id="fo-meta"  class="text-muted mb-0" style="font-size:0.85rem;"></p>
-    </div>
-
-    <!-- Ring Timer -->
-    <div class="d-flex justify-content-center mb-4">
-        <div style="position:relative; width:170px; height:170px;">
-            <svg viewBox="0 0 200 200" 
-        style="width:100%;height:100%;transform:rotate(-90deg);">
-                <circle cx="100" cy="100" r="88"
-                    fill="none" stroke="#eeeeee" stroke-width="12"></circle>
-                <circle cx="100" cy="100" r="88"
-                    fill="none" stroke="#4361ee" stroke-width="12"
-                    stroke-linecap="round"
-                    stroke-dasharray="552.92"
-                    stroke-dashoffset="0"
-                    id="fo-ring"
-                    style="transition: stroke-dashoffset 1s linear, stroke 0.4s ease;">
-                </circle>
-            </svg>
-            <div id="fo-time" 
-            style="
-                position:absolute; top:50%; left:50%;
-                transform:translate(-50%,-50%);
-                font-size:2rem; font-weight:700;
-                color:#1a1a2e; letter-spacing:-1px;">
-                00:00
-            </div>
-        </div>
-    </div>
-<div class="text-center mb-3">
-    <button class="btn btn-sm btn-outline-primary"
-    onclick="openBreakdownForCurrentTask()"> I'm stuck - suggest micro-steps
-</button>
-</div>
-
-    <!-- Subtasks section -->
-    <div style="max-width:520px; margin:0 auto;">
-        <p class="fw-semibold mb-2" style="font-size:0.85rem; color:#6c757d; letter-spacing:0.5px;">
-            MY SUBTASKS</p>
-        <p class="text-muted mb-2" style="font-size:0.8rem;">
-      Break the task into tiny, 3–10 minute actions. Example: “Open doc”, “Write heading”, “Outline 3 bullets”.
-    </p>     
-
-        <ul id="fo-subtask-list" class="list-unstyled mb-3"></ul>
-
-        <!-- Add subtask input -->
-        <div class="d-flex gap-2 mb-4">
-            <input id="fo-subtask-input" type="text"
-                class="form-control form-control-sm"
-                placeholder="Add a subtask..."
-                onkeydown="if(event.key==='Enter')
-                {event.preventDefault(); addSubtask();}">
-
-            <button class="btn btn-sm btn-outline-primary" onclick="addSubtask()">Add</button>
-        </div>
-
-        <!-- Mark complete -->
-        <div class="d-flex justify-content-center">
-            <a id="fo-complete-link" href="#"
-               class="btn btn-success px-4">
-                ✓ Mark task complete
-            </a>
-        </div>
-    </div>
- <div id="breakdown-box" class="card border-0 shadow-sm">
-    <div class="card-body">
-      <div class="d-flex justify-content-between align-items-center mb-2">
-        <p class="text-muted mb-0" style="font-size:0.75rem;letter-spacing:0.5px;"> MICRO-STEPS</p>
-        <button class="btn-close btn-sm" onclick="document.getElementById('breakdown-box').style.display='none'"></button>
- </div>
-      <div id="breakdown-steps"></div>
-      <p id="breakdown-source" class="text-muted mb-0 mt-2" style="font-size:0.7rem;"></p>
-    </div>
+    <h4 class="fw-bold mb-0">Top 3 tasks</h4>
+    <a href="{{ url_for('all_tasks') }}" class="text-decoration-none">View all</a>
   </div>
+  <p class="text-muted mb-3">Only the tasks most worth your attention are shown here.
+    Pin a task from "View all" to always keep it in this list.</p>
+ 
+  <!-- Stat cards: Days active + Streak side by side -->
+  <div class="stat-panel mb-4">
+    <div class="d-flex flex-wrap align-items-center gap-4">
+      <div>
+        <p class="stat-label mb-1">DAYS ACTIVE </p>
+        <h2 class="fw-bold mb-0" stat-number>
+          {{ total_active_days }} <span class="stat-unit">day{{ 's' if total_active_days != 1 else '' }}</span> {{ current_badge }}
+        </h2>
+        </div>
+      <div class="stat-divider d-none d-sm-block"></div>
+      <div class="flex-grow-1">
+        <div class="stat-line">
+          <span class="stat-icon">Quote:</span>
+          <span class="stat-quote">{{ today_quote }}</span>
+        </div>
+        <div class="stat-line">
+          <span class="stat-icon">Time:</span>
+          <span>{{ total_focus_minutes }} min focused <span class="text-muted">(all-time)</span></span>
+      </div>
+    </div>
+    <div>      
+  <!-- task list with Start focus and I'm stuck button -->
+  {% if tasks %}
+  <div class="task-list">
+    {% for task in tasks %}
+      {% if task.priority == 3 %}
+        {% set priority_class = 'priority-high' %}
+        {% set priority_label = 'High' %}
+      {% elif task.priority == 2 %}
+        {% set priority_class= 'priority-medium' %}
+        {% set priority_label = 'Medium' %}
+      {% else %}
+        {% set priority_class = 'priority-low' %}
+        {% set priority_label= 'Low' %}
+      {% endif %}
+      <div class="task-card {{ priority_class }} {% if task.is_complete %}opacity-50{% endif %}">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <div class="task-title {% if task.is_complete %}text-decoration-line-through{% endif %}">
+               {% if task.pinned_to_top %}<span title="Pinned to Top 3">Pinned</span>{% endif %}
+                {{ task.title }}
+
+            </div>
+            <div class="task-meta">
+              {{ priority_label }}
+              {% if task.deadline %} - Due {{ task.deadline }}{% endif %}
+            - {{ task.estimate_mins or 25 }} min
+            </div>
+          </div>
+          <!-- Overflow menu: Edit / Delete tucked away -->
+          <div class="dropdown">
+            <button class="btn-icon-ghost" data-bs-toggle="dropdown">More</button>
+            <ul class="dropdown-menu dropdown-menu-small dropdown-menu-end">
+              <li><a class="dropdown-item" href="{{ url_for('edit_task', task_id=task.id) }}">Edit</a></li>
+              <li>
+                <form method="POST" action="{{ url_for('delete_task', task_id=task.id) }}"
+                      onsubmit="return confirm('Delete this task?');" class="m-0">
+                  <button type="submit" class="dropdown-item text-danger"
+                          style="border:none; background:none; width:100%; text-align:left; padding:0.25rem 1rem;">
+                    Delete
+                  </button>
+                </form>
+              </li>
+            </ul>
+          </div>
+        </div>
+ 
+        <div class="task-actions mt-2">
+          {% if not task.is_complete %}
+          
+          <button class="btn-primary-action start-focus-btn"
+            data-task-id="{{ task.id }}"
+            data-task-title="{{ task.title }}"
+            data-task-details="{{ task.details or '' }}"
+            data-estimate-mins="{{ task.estimate_mins or 25 }}"
+            data-task-deadline="{{ task.deadline or '' }}"
+            data-task-priority="{{ task.priority }}">
+            Start focus ({{ task.estimate_mins or 25 }}m)
+          </button>
+          <form method="POST" action="{{ url_for('complete_task', task_id=task.id) }}" class="d-inline">
+            <button type="submit" class="btn-icon-ghost">✓ Mark Done</button>
+          </form>
+          {% else %}
+          <span class="badge bg-success">Completed</span>
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="mt-4 text-muted">No tasks yet. Start by adding one.</p>
+  {% endif %}
 </div>
+{% include "_focus_overlay.html" %}
 {% endblock %}
 
-<!-- Countsown + Multiple subtasks + Im stuck button -->
 {% block scripts %}
-<script>
-
-//========= state======
-    let focusInterval = null;
-    let focusTotalSeconds = 0;
-    let focusRemainingSeconds = 0;
-    let focusTaskId = null;
-    let currentTaskEstimate = 0;
-    let currentTaskPriority = 2;
-    let currentTaskTitle = '';
-    let currentTaskDeadline = '';
-    const FO_CIRCUMFERENCE = 552.92;
-
-    
-    //====utilities =====
-    function formatTime(seconds) {
-        const m = Math.floor(seconds / 60);
-        const s = seconds % 60;
-        return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
-    }
-
-    function playChime() {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        if (ctx.state === 'suspended') ctx.resume();
-        const now = ctx.currentTime;
-        [523.25, 659.25].forEach(function(freq, i) {
-            const osc  = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.frequency.value = freq;
-            osc.type = 'sine';
-            gain.gain.setValueAtTime(0.0001, now + i * 0.35);
-            gain.gain.exponentialRampToValueAtTime(0.15, now + i * 0.35 + 0.05);
-            gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.35 + 1.2);
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            osc.start(now + i * 0.35);
-            osc.stop(now + i * 0.35 + 1.3);
-        });
-    }
-// ====== Rig Visual
-    function updateRing() {
-        const ring = document.getElementById('fo-ring');
-        if (!focusTotalSeconds) return;
-        const fraction = focusRemainingSeconds / focusTotalSeconds;
-         
-        ring.style.strokeDashoffset = FO_CIRCUMFERENCE * (1 - fraction);
-        ring.style.stroke = fraction <= 0.10 ? '#e63946'
-                            :fraction<= 0.30 ? '#f4a261'
-                            : '#4361ee';
-        }
-// === subtask (local Storage keyed by task id)===
-    function subtaskKey(taskId) {
-        return 'anchor_subtasks_'+ taskId; }
-   
-    function loadSubtasks(taskId) {
-        try {
-            return JSON.parse(localStorage.getItem(subtaskKey(taskId))) || []; }
-        catch(e) { return []; }
-    }
-
-    function saveSubtasks(taskId, list) {
-        localStorage.setItem(subtaskKey(taskId),  JSON.stringify(list));
-    }
-     function renderSubtasks(taskId) {
-    const ul   = document.getElementById('fo-subtask-list');
-    const list = loadSubtasks(taskId);
-    ul.innerHTML = '';
-
-    if (list.length === 0) {
-        ul.innerHTML = '<li class="text-muted" style="font-size:0.85rem;">No subtasks yet — add one below.</li>';
-        return;
-    }
-
-list.forEach(function(item, idx) {
-        const li = document.createElement('li');
-        li.className = 'd-flex align-items-center gap-2 mb-2';
-        li.innerHTML = `
-            <input type="checkbox" class="form-check-input mt-0" ${item.done ? 'checked': ''}
-                onchange="toggleSubtask(${taskId}, ${idx}, this.checked)">
-            <span class="${item.done ? 'fo-subtask-done': ''}" style="font-size:0.9rem;">
-                ${item.text}
-            </span>
-            <button class="btn-close btn-sm ms-auto" style="font-size:0.6rem;"
-                onclick="deleteSubtask(${taskId}, ${idx})">
-            </button>
-            `;
-            ul.appendChild(li);
-    });
-}
-   function addSubtask() {
-    const input = document.getElementById('fo-subtask-input');
-    const text = input.value.trim();
-    if (!text || !focusTaskId) return;
-    const list = loadSubtasks(focusTaskId);
-    list.push({ text:text, done: false });
-    saveSubtasks(focusTaskId, list);
-    renderSubtasks(focusTaskId);
-    input.value= '';
-    input.focus();
-}
-
-function toggleSubtask(taskId, idx, done) {
-    const list= loadSubtasks(taskId);
-    if (!list[idx]) return;
-    list[idx].done = done;
-    saveSubtasks(taskId, list);
-    renderSubtasks(taskId);
-}
-
-function deleteSubtask(taskId, idx) {
-    const list = loadSubtasks(taskId);
-    list.splice(idx,1);
-    saveSubtasks(taskId, list);
-    renderSubtasks(taskId);
-}
-// === Focus mode entry exit========
-function startFocusTimer(taskId, taskTitle,currentTaskDetails, estimateMins, taskDeadline, taskPriority) {
-    if (focusInterval) clearInterval(focusInterval);
-
-    focusTaskId = taskId;
-    currentTaskTitle= taskTitle;
-    currentTaskDetails = taskDetails;
-    currentTaskEstimate= estimateMins;
-    currentTaskPriority= taskPriority;
-    currentTaskDeadline= taskDeadline;
-    focusTotalSeconds = estimateMins * 60;
-    focusRemainingSeconds= focusTotalSeconds;
-
-    // Populate overlay
-    document.getElementById('fo-title').textContent = taskTitle;
-
-    const priorityLabel = taskPriority === 3 ? 'High': taskPriority === 2 ? 'Medium' : 'Low';
-    const deadlineStr = taskDeadline ? ' · Due ' + taskDeadline : '';
-    document.getElementById('fo-meta').textContent = priorityLabel + deadlineStr + ' · ' + estimateMins + ' min';
-    document.getElementById('fo-time').textContent = formatTime(focusRemainingSeconds);
-    document.getElementById('fo-complete-link').href = '/tasks/' + taskId + '/complete';
-
-    // Load saved subtasks
-    renderSubtasks(taskId);
-
-    // Show overlay
-    document.getElementById('focus-overlay').classList.add('show');
-    document.body.style.overflow ='hidden';
-    updateRing();
-
-    // Start countdown
-    focusInterval = setInterval(function() {
-        focusRemainingSeconds -= 1;
-        document.getElementById('fo-time').textContent = formatTime(Math.max(focusRemainingSeconds, 0));
-        updateRing();
-// simple cue : aftert each 10 mins, encourage checking subtasks
-        if (focusRemainingSeconds > 0 && focusRemainingSeconds % 600 === 0) {
-      const priorityLabelInner = currentTaskPriority === 3 ? 'High' : currentTaskPriority === 2 ? 'Medium' : 'Low';
-      const deadlineInner = currentTaskDeadline ? ' · Due ' + currentTaskDeadline : '';
-            document.getElementById('fo-meta').textContent = priorityLabelInner + deadlineInner + ' . Take 10 seconds to tick any finished subtasks';
-        }
-        if (focusRemainingSeconds <= 0) {
-            clearInterval(focusInterval);
-            focusInterval= null;
-            playChime();
-            document.getElementById('fo-time').textContent = 'Horayyy!!';
-            document.getElementById('fo-meta').textContent = 'It is complete! Great work.';
-            logFocusSession(taskId, estimateMins);
-        }
-    }, 1000);
-}
-
-function exitFocusMode() {
-    if (focusInterval) { clearInterval(focusInterval); focusInterval = null; }
-    document.getElementById('focus-overlay').classList.remove('show');
-    document.body.style.overflow = '';
-    focusTaskId = null;
-}
-//===== Log focus to backend ====
-function logFocusSession(taskId, estimateMins) {
-    fetch('/focus/log', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:JSON.stringify({ task_id: taskId, duration_mins: estimateMins })
-    }).catch(function() {
-        console.warn('Could not log focus session.');
-    });
-}
-
-// ==== Im stuck breakdown - inside focus mode ===
-function openBreakdownForCurrentTask() {
-  if (!focusTaskId) return;
-   getBreakdown(focusTaskId, currentTaskTitle, currentTaskDetails, currentTaskDeadline, currentTaskPriority, currentTaskEstimate);
-}
-function getBreakdown(taskId, title,taskDetails, deadline, priority, estimateMins) {
-    const box = document.getElementById('breakdown-box');
-    const steps = document.getElementById('breakdown-steps');
-    const source = document.getElementById('breakdown-source');
-
-    box.style.display = 'block';
-    steps.innerHTML = '<p class="text-muted">Breaking it down for you...</p>';
-    source.textContent = '';
-
-    fetch('/tasks/' + taskId + '/breakdown', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            title: title, 
-            details:details,
-            deadline: deadline,
-            priority: priority, 
-            estimate_mins: estimateMins
-        })
-    })
-    .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
-    .then(function(data) {
-        steps.innerHTML = data.steps.map(function(s) {
-            return `
-        
-            <div class="d-flex gap-2 align-items-start mb-2">
-                <span class="badge bg-primary rounded-circle flex-shrink-0"
-                      style="width:24px;height:24px;line-height:16px;text-align:center;">
-                    ${s.step}
-                </span>
-                <div>
-                    <span class="fw-semibold">${s.action}</span>
-                    <span class="text-muted ms-1" style="font-size:0.8rem;">· ${s.duration_mins} min</span>
-                </div>
-            </div>`;
-        }).join('');
-        source.textContent = data.source === 'fallback'
-            ? ' OOPS! AI unavailable — showing default steps.'
-            : 'Steps generated by Gemini AI';
-    })
-    .catch(function() {
-        steps.innerHTML = '<p class="text-danger">Could not load steps. Please try again another time. </p>';
-    });
-}
-    // Brain Dump JS
-    let bdTimeframe = 'none'; // default: no rush
-    let bdDuration = null; // default unestimated 
-function toggleBrainDumpDetails() {
-  const panel = document.getElementById('brain-dump-details');
-  const arrow = document.getElementById('bd-toggle-arrow');
-  const isHidden = panel.style.display === 'none' || panel.style.display === '';
-  panel.style.display = isHidden ? 'block' : 'none';
-  arrow.textContent = isHidden ? '⌃' : '⌄';
-}
-
-document.querySelectorAll('.bd-chip').forEach(function(btn) {
-  btn.addEventListener('click', function() {
-    document.querySelectorAll('.bd-chip').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    bdTimeframe = btn.dataset.value;
-  });
-});
-
-document.querySelectorAll('.bd-dur-chip').forEach(function(btn) {
-  btn.addEventListener('click', function() {
-    document.querySelectorAll('.bd-dur-chip').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-
-    const customInput = document.getElementById('bd-duration-custom');
-    if (btn.dataset.value === 'custom') {
-      customInput.style.display = 'block';
-      customInput.focus();
-      bdDuration = null; // wait for the user to type a value
-    } else {
-      customInput.style.display = 'none';
-      bdDuration = parseInt(btn.dataset.value, 10);
-    }
-  });
-});
-const bdCustomImput =
-document.getElementById('bd-duration-custom')
-if (bdCustomImput){
-    bdCustomImput.addEventListener('input', function() {
-const val = parseInt(this.value, 10);
-bdDuration = isNaN(val) ? null : val;
-});
-}
-
-function submitBrainDump() {
-  const input = document.getElementById('brain-dump-input');
-  const title = input.value.trim();
-  if (!title) return;
-
-  const deadlineField = document.getElementById('bd-deadline');
-  const deadline = deadlineField && deadlineField.value ? deadlineField.value : null;
-
-  fetch('/quick_add_task', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      title: title,
-      deadline: deadline,
-      timeframe: deadline ? null : bdTimeframe,
-      estimate_mins: bdDuration
-    })
-  })
-  .then(function(r) { return r.json(); })
-  .then(function(data) {
-    if (data.success) {
-      showBrainDumpCheck();
-      input.value = '';
-      input.focus();  // cursor stays active for the next thought
-    }
-  })
-  .catch(function() {
-    console.warn('Could not save task — check your connection.');
-  });
-}
-
-function showBrainDumpCheck() {
-  const check = document.getElementById('brain-dump-check');
-  check.style.opacity = '1';
-  setTimeout(function() {
-    check.style.opacity = '0';
-  }, 400);
-}
-</script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 {% endblock %}

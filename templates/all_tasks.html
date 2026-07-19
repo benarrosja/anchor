@@ -2,19 +2,24 @@
 {% block title %}All Tasks{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
+<div class="container">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <div>
             <h2 class="fw-bold mb-1">All tasks</h2>
-            <p class="text-muted mb-0">Organised by urgency so the list feels easier to scan.</p>
-        </div>
-        <div class="d-flex gap-2">
-            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">Back to dashboard</a>
+            <a href="{{ url_for('dashboard') }}" class="text-decoration-none">Back to dashboard</a>
             <a href="{{ url_for('add_task') }}" class="btn btn-dark">+ Add Task</a>
         </div>
-    </div>
-
-    {% macro render_task(task) %}
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show py-2 px-3 mt-2" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert"></button>
+      </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+    {% macro render__card(task, allow_actions=true) %}
         {% if task.priority == 3 %}
             {% set priority_class = 'priority-high' %}
             {% set priority_label = 'High' %}
@@ -30,167 +35,88 @@
             <div class="d-flex justify-content-between align-items-start">
                 <div>
                     <div class="task-title {% if task.is_complete %}text-decoration-line-through{% endif %}">
+                        {% if task.pinned_to_top %}<span title="Pinned to Top 3">Pinned</span>{% endif %}
                         {{ task.title }}
                     </div>
                     <div class="task-meta">
                         {{ priority_label }}
-                        {% if task.deadline %} · Due {{ task.deadline }}{% endif %}
-                        {% if task.estimate_mins %} · {{ task.estimate_mins }} min{% endif %}
+                        {% if task.deadline %} - Due {{ task.deadline }}{% endif %}
+                        - {{ task.estimate_mins }} min{% endif %}
                     </div>
                 </div>
 
                 <div class="dropdown">
-                    <button class="btn-icon-ghost" data-bs-toggle="dropdown">⋯</button>
+                    <button class="btn-icon-ghost" data-bs-toggle="dropdown">More</button>
                     <ul class="dropdown-menu dropdown-menu-small dropdown-menu-end">
                         <li><a class="dropdown-item" href="{{ url_for('edit_task', task_id=task.id) }}">Edit</a></li>
-                        <li>
-                            <a class="dropdown-item text-danger"                              
+                        <li>   
                             <form method="POST" action="{{ url_for('delete_task', task_id=task.id) }}"
-                            onsubmit="return confirm('Delete this task?');" class="d-inline">
+                            onsubmit="return confirm('Delete this task?');" class="m-0">
                                 <button type="submit" class="dropdown-item text-danger" style="border:none; background:none; width:100%; text-align:left;">
+                                padding:0.25rem 1rem;">
                                 Delete
                                 </button>
                             </form>
-
-    
-                            </a>
                         </li>
                     </ul>
                 </div>
             </div>
 
             <div class="task-actions mt-2">
-                {% if not task.is_complete %}
-                    <button class="btn-primary-action"
-                        onclick="window.location.href='{{ url_for('dashboard') }}'">
-                        ▶ Start from dashboard
-                    </button>
-                    <button class="btn-icon-ghost"
-                        onclick="getBreakdown({{ task.id }}, '{{ task.title|escape }}', '{{ task.deadline or '' }}', {{ task.priority }}, {{ task.estimate_mins }})">
-                        🧩 I'm stuck!
-                    </button>
-                    <a href="{{ url_for('complete_task', task_id=task.id) }}" class="btn-icon-ghost ms-auto">
-                        ✓ Mark done
-                    </a>
-                {% else %}
-                    <span class="badge bg-success">Completed</span>
-                {% endif %}
-            </div>
+                {% if not task.is_complete and allow_actions %}
+                    <button class="btn-primary-actionstart-focus-btn"
+                data-task-id="{{ task.id }}"
+                data-task-title="{{ task.title }}"
+                data-task-details="{{ task.details or '' }}"
+                data-estimate-mins="{{ task.estimate_mins or 25 }}"
+                data-task-deadline="{{ task.deadline or '' }}"
+                data-task-priority="{{ task.priority }}">
+          Start focus ({{ task.estimate_mins or 25 }}m)
+        </button>
+        <form method="POST" action="{{ url_for('complete_task', task_id=task.id) }}" class="d-inline">
+          <button type="submit" class="btn-icon-ghost">Mark Done</button>
+        </form>
+        <form method="POST" action="{{ url_for('toggle_pin', task_id=task.id) }}" class="d-inline">
+          {% if task.pinned_to_top %}
+          <button type="submit" class="btn-icon-ghost">Remove from Top 3</button>
+          {% else %}
+          <button type="submit" class="btn-icon-ghost">Add to Top 3</button>
+          {% endif %}
+        </form>
+        {% elif task.is_complete %}   
+        <span class="badge bg-success">Completed</span>
+        {% endif %}
+        </div>
         </div>
     {% endmacro %}
-
+      <h5 class="fw-bold mt-4 mb-2">Overdue</h5>
     {% if overdue_tasks %}
-        <section class="mb-4">
-            <h4 class="fw-bold text-danger mb-3">Overdue</h4>
-            {% for task in overdue_tasks %}
-                {{ render_task(task) }}
-            {% endfor %}
-        </section>
-    {% endif %}
+    {% for task in overdue_tasks %} {{ task_card(task) }}{% endfor %}
+    {% else %}
+    <p class="text-muted">Nothing overdue - nice work.</p>
+  {% endif %}
+      <h5 class="fw-bold mt-4 mb-2">Due soon (next 7 days)</h5>
+  {% if due_soon_tasks %}
+    {% for task in due_soon_tasks %}
+         {{ task_card(task) }}
+    {% endfor %}
+{% else %}
+    <p class="text-muted">Nothing due soon.</p>
+  {% endif %}
 
-    {% if due_soon_tasks %}
-        <section class="mb-4">
-            <h4 class="fw-bold text-warning mb-3">Due soon</h4>
-            {% for task in due_soon_tasks %}
-                {{ render_task(task) }}
-            {% endfor %}
-        </section>
-    {% endif %}
+  <h5 class="fw-bold mt-4 mb-2">Later / no deadline</h5>
+  {% if later_tasks %}
+    {% for task in later_tasks %}{{ task_card(task) }}{% endfor %}
+  {% else %}
+    <p class="text-muted">Nothing else on your list.</p>
+  {% endif %}
 
-    {% if later_tasks %}
-        <section class="mb-4">
-            <h4 class="fw-bold text-secondary mb-3">Later</h4>
-            {% for task in later_tasks %}
-                {{ render_task(task) }}
-            {% endfor %}
-        </section>
-    {% endif %}
-
-    {% if completed_tasks %}
-        <section class="mb-4">
-            <h4 class="fw-bold text-success mb-3">Completed</h4>
-            {% for task in completed_tasks %}
-                {{ render_task(task) }}
-            {% endfor %}
-        </section>
-    {% endif %}
-
-    {% if not overdue_tasks and not due_soon_tasks and not later_tasks and not completed_tasks %}
-        <div class="text-center mt-5">
-            <h4 class="fw-bold">No tasks yet</h4>
-            <p class="text-muted">Start by adding your first task.</p>
-            <a href="{{ url_for('add_task') }}" class="btn btn-dark">+ Add Task</a>
-        </div>
-    {% endif %}
+  <h5 class="fw-bold mt-4 mb-2">Completed</h5>
+  {% if completed_tasks %}
+    {% for task in completed_tasks %}{{ task_card(task, allow_actions=false) }}{% endfor %}
+  {% else %}
+    <p class="text-muted">No completed tasks yet.</p>
+  {% endif %}
 </div>
-
-<!-- Breakdown panel — shared across all tasks on this page -->
-<div class="container">
-    <div id="breakdown-box" class="card border-0 shadow-sm mb-4 mt-3"
-         style="display:none; border-radius:14px; background:#eef3fb;">
-        <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <p class="text-muted mb-0" style="font-size:0.75rem; letter-spacing:0.5px;"> MICRO-STEPS</p>
-                <button class="btn-close btn-sm"
-                    onclick="document.getElementById('breakdown-box').style.display='none'">
-                </button>
-            </div>
-            <div id="breakdown-steps"></div>
-            <p id="breakdown-source" class="text-muted mb-0 mt-2" style="font-size:0.7rem;"></p>
-        </div>
-    </div>
-</div>
-
-<script>
-function getBreakdown(taskId, title, deadline, priority, estimateMins) {
-    const box    = document.getElementById('breakdown-box');
-    const steps  = document.getElementById('breakdown-steps');
-    const source = document.getElementById('breakdown-source');
-
-    box.style.display = 'block';
-    box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    steps.innerHTML = '<p class="text-muted">Breaking it down for you...</p>';
-    source.textContent = '';
-
-    fetch('/tasks/' + taskId + '/breakdown', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            title: title,
-            deadline: deadline,
-            priority: priority,
-            estimate_mins: estimateMins
-        })
-    })
-    .then(function(response) {
-        if (!response.ok) throw new Error('Server error');
-        return response.json();
-    })
-    .then(function(data) {
-        const html = data.steps.map(function(s) {
-            return `
-            <div class="d-flex gap-2 align-items-start mb-2">
-                <span class="badge bg-primary rounded-circle flex-shrink-0"
-                      style="width:24px;height:24px;line-height:16px;text-align:center;">
-                    ${s.step}
-                </span>
-                <div>
-                    <span class="fw-semibold">${s.action}</span>
-                    <span class="text-muted ms-1" style="font-size:0.8rem;">
-                        · ${s.duration_mins} min
-                    </span>
-                </div>
-            </div>`;
-        }).join('');
-
-        steps.innerHTML = html;
-        source.textContent = data.source === 'fallback'
-            ? ' AI unavailable — showing default steps.'
-            : ' Steps generated by Gemini AI';
-    })
-    .catch(function() {
-        steps.innerHTML = '<p class="text-danger">Could not load steps. Please try again.</p>';
-    });
-}
-</script>
+{% include "_focus_overlay.html" %}
 {% endblock %}
