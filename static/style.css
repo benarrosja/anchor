@@ -1,4 +1,3 @@
-/* ===ADHD- friendly task card design === */
 
 .task-card{
     background: #ffffff;
@@ -20,13 +19,11 @@
 .task-title {
     font-size: 1.05rem;
     font-weight: 600;
-    margin-bottom: 4px
-}
+    margin-bottom: 4px;}
 .task-meta {
     font-size: 0.8rem;
     color: #8a8a8a;
-    margin-bottom: 10px;
-}
+    margin-bottom: 10px;}
 .task-actions {
     display: flex;
     gap: 8px;
@@ -46,9 +43,7 @@
 .btn-icon-ghost {
     background: none;
     border: none;
-    color:  #9a9a9a;
-    font-size: 0.85rem;
-    padding: 4px 8px;
+    color: #9a9a9a; font-size: 0.85rem;padding: 4px 8px;
 }
 .btn-icon-ghost:hover { color: #444; }
 
@@ -56,7 +51,7 @@
     min-width: 140px;
     font-size: 0.85rem;
 }
-/* ===== Focus pizza timer: dark calming, shrinking ring====== */
+/* ===== Focus pizza timer: dark calming, shrinking ring */
 .focus-timer-panel {
     background: #1f2128;
     border: 1px solid #2c2f38;
@@ -103,7 +98,7 @@
     stroke: #4caf50; /* starts calm green */
     stroke-width: 10;
     stroke-linecap: round;
-    stroke-dasharray: 565.48; /* 2 * rad * 90, the full circumferce */
+    stroke-dasharray: 565.48;
     stroke-dashoffset: 0;
     transition: stroke-dashoffset 1s linear, stroke 1s ease; }
 
@@ -113,7 +108,7 @@
 
 @keyframes pulse-ring {
     0%, 100% { filter: drop-shadow(0 0 0px #e53935); }
-    50%  { filter: drop-shadow( 0 0 10px #e53935) ; }
+    50% { filter: drop-shadow(0 0 10px #e53935) ; }
 }
 
 .timer-ring-text {
@@ -135,3 +130,11 @@
     font-size: 0.85rem;
 }
 .btn-cancel-focus:hover { background: #23262b; color: #fff; }
+
+.focus-overlay {
+  display:  none; position: fixed; inset: 0; background: #f5f7ff;
+  z-index: 2000; overflow-y:  auto; padding: 24px 16px 40px;
+}
+.focus-overlay.show { display:  block; }
+.fo-subtask-done { text-decoration: line-through; color: #9ca3af; transition: all 0.25s ease; }
+#breakdown-box { display: none; border-radius: 14px; background: #eef3fb; max-width: 520px; margin: 24px auto 0; }
