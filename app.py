@@ -155,8 +155,8 @@ def set_energy():
     finally:
         cursor.close()
         conn.close()
-        flash(f"Energy updated to {ENERGY_LABELS[energy]} - Tasks re-ranked!", "success")
-        return redirect(url_for("dashboard"))
+    flash(f"Energy updated to {ENERGY_LABELS[energy]} - Tasks re-ranked!", "success")
+    return redirect(url_for("dashboard"))
 
 
 
@@ -174,19 +174,19 @@ def logout():
 @login_required
 def quick_add_task():
     """
-    Brain Dump needs only a tile. Optional: may also send deadline, timeframe, estimate_mins.
-    Always returns instantly with sensible silent defaults.
+    Brain Dump only needs a title. Optional: deadline, timeframe, estimate_mins, details. 
+    Returns JSON so the JS can confirm without a page reload.
     """
     data = request.get_json(force=True)
     title = (data.get("title") or "").strip()
 
     if not title:
         return jsonify({"success": False, "error": "Title is required."}), 400
-        details = (data.get("details") or "").strip() or None
-        deadline = data.get("deadline") or None
-        timeframe = data.get("timeframe")
-
-        estimate_mins = data.get("estimate_mins") or 25
+        
+    details = (data.get("details") or "").strip() or None
+    deadline = data.get("deadline") or None
+    timeframe = data.get("timeframe")
+    estimate_mins = data.get("estimate_mins") or 25
 
     # Map timeframe - deadline + priority, only if no explicit date was given
     if not deadline and timeframe:
@@ -207,12 +207,12 @@ def quick_add_task():
     cursor = conn.cursor()
     try:    
         cursor.execute(
-        """
-        INSERT INTO tasks (user_id, title, deadline, priority, estimate_mins, details)
-        VALUES (%s, %s, %s, %s, %s, %s)
-        """,
-        (session["user_id"], title, deadline, priority, estimate_mins, details)
-    )
+            """
+            INSERT INTO tasks (user_id, title, deadline, priority, estimate_mins, details)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            """,
+            (session["user_id"], title, deadline, priority, estimate_mins, details)
+        )
         conn.commit()
         new_task_id = cursor.lastrowid
     finally:
@@ -220,6 +220,7 @@ def quick_add_task():
         conn.close()
 
     return jsonify({"success": True, "task_id": new_task_id})
+
 
  #====================Add Task route============
 @app.route("/add_task", methods=["GET", "POST"])
@@ -341,8 +342,6 @@ def delete_task(task_id):
         conn.close()
     return redirect(url_for("dashboard"))
 
-#=============COACH GENAI ROUTE==================
-
 @app.route("/tasks/<int:task_id>/pin", methods=["POST"])
 @login_required
 def toggle_pin(task_id):
@@ -463,12 +462,7 @@ def dashboard():
         if total_active_days >= days_required:
             current_badge = label
 
-    
-    current_badge = "Seedling"
-    for days_required, emoji in BADGES:
-        if total_active_days >= days_required:
-            current_badge = label
-
+   
     today_quote = random.choice(ENCOURAGEMENT_QUOTES)
 
 # Score every task, then sort, then slice to top 3
