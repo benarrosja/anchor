@@ -5,9 +5,10 @@ let bdDuration = null;
 function toggleBrainDumpDetails(){
   const panel = document.getElementById('brain-dump-details');
   const arrow = document.getElementById('bd-toggle-arrow');
+  if (!panel || !arrow) return;
   const isHidden = panel.style.display === 'none' || panel.style.display === '';
   panel.style.display = isHidden ? 'block' : 'none';
-  arrow.textContent = isHidden ? '^' : 'v';
+  arrow.textContent = isHidden ? '^' : '⌄';
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -15,8 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
   if (toggleBtn) toggleBtn.addEventListener('click', toggleBrainDumpDetails);
 
   document.querySelectorAll('.bd-chip').forEach(function(btn){
-    btn.addEventListener('click', function() {
-     document.querySelectorAll('.bd-chip').forEach(b => b.classList.remove('active'));
+    btn.addEventListener('click', function() {document.querySelectorAll('.bd-chip').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       bdTimeframe = btn.dataset.value;
     });
