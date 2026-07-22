@@ -97,6 +97,8 @@ def _parse_steps(raw_text: str) -> list[dict]:
     for idx, s in enumerate(steps):
         if not isinstance(s, dict):
             raise ValueError(f"Step is not a dict: {s}")
+        if "action" not in s:
+            raise ValueError(f"Step missing 'action' key: {s}")
         s.setdefault("step", idx + 1)
         s.setdefault("duration_mins", 5)
 

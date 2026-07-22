@@ -1,5 +1,6 @@
 from datetime import date
 import math
+import re
 
 LOW_VALUE_KEYWORDS = {
     "sleep", "nap", "rest", "play", "travel", "commute", "drive", "cycle",
@@ -8,6 +9,10 @@ LOW_VALUE_KEYWORDS = {
     "hairdresser", "barber", "pedicure", "manicure", "social media",
     "instagram", "tiktok", "facebook", "twitter", "x", "tinder",
     "scroll", "browse", "game", "gaming",
+}
+_KEYWORD_PATTERNS = {
+    keyword: re.compile(r"\b" + re.escape(keyword) + r"\b")
+    for keyword in LOW_VALUE_KEYWORDS
 }
 
 
@@ -36,8 +41,8 @@ def keyword_penalty(title: str) -> float:
         return 1.0
 
     lowered = title.lower()
-    for keyword in LOW_VALUE_KEYWORDS:
-        if keyword in lowered:
+    for keyword, pattern in _KEYWORD_PATTERNS.items():
+        if pattern.search(lowered):
             return 0.25  # heavily discount, but don't fully hide the task
     return 1.0
 

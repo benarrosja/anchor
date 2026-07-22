@@ -1,17 +1,17 @@
 <div id="focus-overlay" class="focus-overlay">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <span class="text-muted" style="font-size:0.75rem; letter-spacing:0.8px;"> FOCUS MODE</span>
-    <button id="fo-exit-btn" class="btn btn-sm btn-outline-secondary">
+    <button type="button" id="fo-exit-btn" class="btn btn-sm btn-outline-secondary">
       Exit focus mode
     </button>
   </div>
 
-
+  <!-- Task title -->
   <div class="text-center mb-4">
     <h3 id="fo-title" class="fw-bold mb-1" style="color:#1a1a2e;"></h3>
     <p id="fo-meta" class="text-muted mb-0" style="font-size:0.85rem;"></p>
   </div>
-
+  <!-- Ring Timer -->
   <div class="d-flex justify-content-center mb-4">
     <div style="position:relative; width:170px; height:170px;">
       <svg viewBox="0 0 200 200" style="width:100%;height:100%;transform:rotate(-90deg);">
@@ -51,9 +51,9 @@
 </div>
 
   <div class="text-center mb-3">
-    <button id="fo-stuck-btn" class="btn btn-sm btn-outline-primary">I'm stuck - suggest micro-steps</button>
+    <button type="button" id="fo-stuck-btn" class="btn btn-sm btn-outline-primary">I'm stuck - suggest micro-steps</button>
   </div>
-
+  <!-- Subtasks section -->
   <div style="max-width:520px; margin:0 auto;">
     <p class="fw-semibold mb-2" style="font-size:0.85rem; color:#6c757d; letter-spacing:0.5px;">MY SUBTASKS</p>
     <p class="text-muted mb-2" style="font-size:0.8rem;">
@@ -62,13 +62,15 @@
     
     <ul id="fo-subtask-list" class="list-unstyled mb-3"></ul>
 
+    <!-- Add subtask input -->
     <div class="d-flex gap-2 mb-4">
       <input id="fo-subtask-input" type="text"
              class="form-control form-control-sm"
              placeholder="Add a subtask...">
-      <button id="fo-add-subtask-btn" class="btn btn-sm btn-outline-primary">Add</button>
+      <button type="button" id="fo-add-subtask-btn" class="btn btn-sm btn-outline-primary">Add</button>
     </div>
 
+    <!-- Mark complete -->
     <div class="d-flex justify-content-center">
       <button type="button" id="fo-complete-link" class="btn btn-success px-4">
         Mark task complete
@@ -80,11 +82,9 @@
     <div class="card-body">
       <div class="d-flex justify-content-between align-items-center mb-2">
         <p class="text-muted mb-0" style="font-size:0.75rem;letter-spacing:0.5px;">MICRO-STEPS</p>
-        <button id="fo-breakdown-close-btn" class="btn-close btn-sm"></button>
+        <button type="button" id="fo-breakdown-close-btn" class="btn-close btn-sm"></button>
       </div>
-     
-      <div id="breakdown-steps"></div>
-      
+     <div id="breakdown-steps"></div>
       <p id="breakdown-source" class="text-muted mb-0 mt-2" style="font-size:0.7rem;"></p>
     </div>
   </div>

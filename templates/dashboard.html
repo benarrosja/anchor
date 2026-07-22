@@ -104,9 +104,8 @@
     <p class="mb-2 fw-semibold">What's on your mind?</p>
     <div id="brain-dump-input-wrap">
       <input id="brain-dump-input" type="text" class="form-control"
-        placeholder="e.g. Write the instruction paragraph"
-        autocomplete="off" 
-          <span id="brain-dump-check">Done</span>
+  placeholder="e.g. Write the instruction paragraph" autocomplete="off">
+  <span id="brain-dump-check">Done</span>
     </div>
     <button type="button" id="bd-toggle-btn" class="bd-details-toggle mt-2">
     <span id="bd-toggle-arrow">v</span> Add details (optional)
@@ -181,7 +180,7 @@
     <div class="d-flex flex-wrap align-items-center gap-4">
       <div>
         <p class="stat-label mb-1">DAYS ACTIVE </p>
-        <h2 class="fw-bold mb-0" stat-number>
+        <h2 class="fw-bold mb-0 stat-number">
           {{ total_active_days }} <span class="stat-unit">day{{ 's' if total_active_days != 1 else '' }}</span> {{ current_badge }}
         </h2>
         </div>
@@ -196,7 +195,7 @@
           <span>{{ total_focus_minutes }} min focused <span class="text-muted">(all-time)</span></span>
       </div>
     </div>
-    <div>      
+  </div>      
   <!-- task list with Start focus and I'm stuck button -->
   {% if tasks %}
   <div class="task-list">
