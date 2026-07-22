@@ -9,7 +9,7 @@ function toggleBrainDumpDetails() {
 
   const isHidden = panel.style.display === 'none' || panel.style.display === '';
   panel.style.display = isHidden ? 'block' : 'none';
-  arrow.textContent = isHidden ? '^' : 'v';
+  arrow.textContent = isHidden ? '⌃' : '⌄';
 }
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -109,6 +109,17 @@ function submitBrainDump() {
         if (deadlineField) deadlineField.value = '';
         bdDuration = null;
         bdTimeframe = 'none';
+         document.querySelectorAll('.bd-dur-chip.active').forEach(function (b) {
+          b.classList.remove('active');
+        });
+        document.querySelectorAll('.bd-chip').forEach(function (b) {
+          b.classList.toggle('active', b.dataset.value === 'none');
+        });
+        const customInput = document.getElementById('bd-duration-custom');
+        if (customInput) {
+          customInput.style.display = 'none';
+          customInput.value = '';
+        }
         input.focus();
       }
     })

@@ -7,3 +7,5 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 });
+
+Focus_mode.js
