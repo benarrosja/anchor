@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, j
 import os
 import random
 import mysql.connector  # needed to catch IntegrityError in register()
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from dotenv import load_dotenv
 
 load_dotenv() # must run before reading any os.getenv
@@ -184,28 +184,48 @@ def quick_add_task():
         return jsonify({"success": False, "error": "Title is required."}), 400
         
     details = (data.get("details") or "").strip() or None
-    deadline = data.get("deadline") or None
-    timeframe = data.get("timeframe")
+    raw_deadline = (data.get("deadline") or "").strip()
+    timeframe = (data.get("timeframe") or "none").strip()
     estimate_mins = data.get("estimate_mins") or 25
 
     # Map timeframe - deadline + priority, only if no explicit date was given
-    if not deadline and timeframe:
-        today = date.today()
-        if timeframe == "today":
-            deadline= today
-            priority = 3
-        elif timeframe == "week":
-            deadline = today + timedelta(days=7)
-            priority = 2
-        else:
-            deadline = None
-            priority = 1
+    try:
+        estimate_mins = int(estimate_mins)
+        if estimate_mins < 1:
+            estimate_mins = 25
+    except (TypeError, ValueError):
+        estimate_mins = 25
+
+    deadline = None
+    priority = 2
+
+    if raw_deadline:
+        try:
+            deadline = datetime.strptime(raw_deadline, "%Y-%m-%d").date()
+            days_until_due = (deadline - date.today()).days
+            if days_until_due <= 0:
+                priority = 3
+            elif days_until_due <= 7:
+                priority = 2
+            else:
+                priority = 1
+        except ValueError:
+            return jsonify({"success": False, "error": "Invalid deadline format."}), 400
+
+    elif timeframe == "today":
+        deadline = date.today()
+        priority = 3
+    elif timeframe == "week":
+        deadline = date.today() + timedelta(days=7)
+        priority = 2
     else:
-        priority = 2    # neutral default when nothing was chosen at all
+       deadline = None
+       priority = 1
 
     conn= get_connection()
     cursor = conn.cursor()
-    try:    
+    try:
+        
         cursor.execute(
             """
             INSERT INTO tasks (user_id, title, deadline, priority, estimate_mins, details)
@@ -214,7 +234,7 @@ def quick_add_task():
             (session["user_id"], title, deadline, priority, estimate_mins, details)
         )
         conn.commit()
-        new_task_id = cursor.lastrowid
+        new_task_id = cursor.lastrowid      
     finally:
         cursor.close()
         conn.close()

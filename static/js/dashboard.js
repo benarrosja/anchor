@@ -120,9 +120,14 @@ function submitBrainDump() {
           customInput.style.display = 'none';
           customInput.value = '';
         }
-        input.focus();
-      }
-    })
+
+        setTimeout(function () {
+            window.location.href = '/tasks';
+        }, 500);
+    } else if (data.error) {
+        console.warn(data.error);
+    }
+})
     .catch(function () {
       console.warn('Could not save task - check your connection.');
     });
