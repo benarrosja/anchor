@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     estimateInput.addEventListener("input", syncActiveChip);
     syncActiveChip();
+    
   document.querySelectorAll('.estimate-chip').forEach(function(btn) {
     btn.addEventListener('click', function() {
       document.getElementById('estimate_mins').value = btn.dataset.mins;

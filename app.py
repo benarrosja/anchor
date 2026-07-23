@@ -362,6 +362,7 @@ def delete_task(task_id):
         conn.close()
     return redirect(url_for("dashboard"))
 
+#====== Pin Route===========
 @app.route("/tasks/<int:task_id>/pin", methods=["POST"])
 @login_required
 def toggle_pin(task_id):

@@ -62,23 +62,25 @@
 
             <div class="task-actions mt-2">
                 {% if not task.is_complete and allow_actions %}
-                    <button class="btn-primary-action start-focus-btn"
+            <button class="btn-primary-action start-focus-btn"
                 data-task-id="{{ task.id }}"
                 data-task-title="{{ task.title }}"
                 data-task-details="{{ task.details or '' }}"
                 data-estimate-mins="{{ task.estimate_mins or 25 }}"
                 data-task-deadline="{{ task.deadline or '' }}"
                 data-task-priority="{{ task.priority }}">
-          Start focus ({{ task.estimate_mins or 25 }}m)
-        </button>
+                Start focus ({{ task.estimate_mins or 25 }}m)
+            </button>
+
         <form method="POST" action="{{ url_for('complete_task', task_id=task.id) }}" class="d-inline">
-          <button type="submit" class="btn-icon-ghost">Mark Done</button>
+        <button type="submit" class="btn-icon-ghost">Mark Done</button>
         </form>
+
         <form method="POST" action="{{ url_for('toggle_pin', task_id=task.id) }}" class="d-inline">
           {% if task.pinned_to_top %}
           <button type="submit" class="btn-icon-ghost">Remove from Top 3</button>
           {% else %}
-          <button type="submit" class="btn-icon-ghost">Add to Top 3</button>
+          <button type="submit" class="btn-icon-ghost">📌</button>
           {% endif %}
         </form>
         {% elif task.is_complete %}   
