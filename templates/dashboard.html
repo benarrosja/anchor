@@ -127,12 +127,7 @@
     
  
       <p class="text-muted mb-1" style="font-size:0.8rem;">How long will it take?</p>
-      <!-- BUG FIX: the "+ Add task" button used to be nested inside this same
-           flex row, ahead of the custom-minutes input — so the custom input
-           only ever appeared to the right of / after the submit button
-           instead of alongside the other duration chips. Moved the custom
-           input up next to its sibling chips and the submit button to its
-           own row below, matching the visual grouping the other sections use. -->
+      
       <div class="d-flex gap-2 flex-wrap align-items-center">
         <button type="button" class="bd-dur-chip" data-value="5">5 min</button>
         <button type="button" class="bd-dur-chip" data-value="15">15 min</button>
@@ -145,7 +140,7 @@
      </div>
       <button type="button" id="bd-submit-btn" class="btn btn-dark btn-sm mt-3"> + Add task </button>
     </div>
-
+</div>
  
   <!-- Energy Check-in Widget -->
   <div class="energy-card p-3 mb-4">
@@ -168,33 +163,28 @@
       {% endfor %}
     </form>
   </div>
- 
+
   <div class="d-flex justify-content-between align-items-center mb-2">
     <h4 class="fw-bold mb-0">Top 3 tasks</h4>
-    <a href="{{ url_for('all_tasks') }}" class="text-decoration-none">View all</a>
-  </div>
-  <p class="text-muted mb-3">Only the tasks most worth your attention are shown here.
-    Pin a task from "View all" to always keep it in this list.</p>
- 
-  <!-- Stat cards: Days active + Streak side by side -->
-  <div class="stat-panel mb-4">
-    <div class="d-flex flex-wrap align-items-center gap-4">
-      <div>
-        <p class="stat-label mb-1">DAYS ACTIVE </p>
-        <h2 class="fw-bold mb-0 stat-number">
-          {{ total_active_days }} <span class="stat-unit">day{{ 's' if total_active_days != 1 else '' }}</span> {{ current_badge }}
-        </h2>
-        </div>
-      <div class="stat-divider d-none d-sm-block"></div>
-      <div class="flex-grow-1">
-        <div class="stat-line">
-          <span class="stat-icon">Quote:</span>
-          <span class="stat-quote">{{ today_quote }}</span>
-        </div>
-        <div class="stat-line">
-          <span class="stat-icon">Time:</span>
-          <span>{{ total_focus_minutes }} min focused <span class="text-muted">(all-time)</span></span>
-      </div>
+    <a href="{{ url_for('all_tasks') }}" class="text-decoration-none d-none d-md-inline">View all</a>
+</div>
+
+<p class="text-muted mb-3">Only visible your top 3 tasks, calculating your deadline, priority and energy level.
+    Other tasks are still available in All Tasks.</p>
+    
+<!-- Stat cards: Days active + Streak side by side -->
+    <div class="dashboard-summary mb-4">
+     <div class="summary-pill">
+        <span class="summary-label">🏆 Active Days</span>
+        <span class="summary-value">{{ total_active_days }} days</span>
+    </div>
+    <div class="summary-pill">
+        <span class="summary-label"> 🎯 Focus</span>
+        <span class="summary-value">{{ total_focus_minutes }} min</span>
+    </div>
+    <div class="summary-pill summary-quote">
+        <span class="summary-label">💡Today</span>
+        <span class="summary-value">{{ today_quote }}</span>
     </div>
   </div>      
   <!-- task list with Start focus and I'm stuck button -->
@@ -214,35 +204,49 @@
       <div class="task-card {{ priority_class }} {% if task.is_complete %}opacity-50{% endif %}">
         <div class="d-flex justify-content-between align-items-start">
           <div>
-            <div class="task-title {% if task.is_complete %}text-decoration-line-through{% endif %}">
-               {% if task.pinned_to_top %}<span title="Pinned to Top 3"> 📌 </span>{% endif %}
-                {{ task.title }}
-
+            <div class="task-title d-flex align-items-center gap-2 {% if task.is_complete %}text-decoration-line-through{% endif %}">
+               {% if task.pinned_to_top %}
+               <span class="pin-badge" title="Pinned task">📌</span>
+               {% endif %}
+                 <span>{{ task.title }}</span>
             </div>
+
             <div class="task-meta">
               {{ priority_label }}
               {% if task.deadline %} - Due {{ task.deadline }}{% endif %}
             - {{ task.estimate_mins or 25 }} min
             </div>
           </div>
-          <!-- Overflow menu: Edit / Delete tucked away -->
+          <!-- menu: Edit / Delete tucked away -->
+
+          <div class="d-flex align-items-center gap-2">
+    <form method="POST" action="{{ url_for('toggle_pin', task_id=task.id) }}" class="d-inline m-0">
+        <button
+            type="submit"
+            class="pin-toggle-btn {% if task.pinned_to_top %}is-pinned{% endif %}"
+            title="{% if task.pinned_to_top %}Unpin task{% else %}Pin task{% endif %}"
+            aria-label="{% if task.pinned_to_top %}Unpin task{% else %}Pin task{% endif %}">
+            📌
+        </button>
+    </form>
+
           <div class="dropdown">
-            <button class="btn-icon-ghost" data-bs-toggle="dropdown">More</button>
-            <ul class="dropdown-menu dropdown-menu-small dropdown-menu-end">
-              <li><a class="dropdown-item" href="{{ url_for('edit_task', task_id=task.id) }}">Edit</a></li>
-              <li>
+        <button class="btn-icon-ghost" data-bs-toggle="dropdown">More</button>
+        <ul class="dropdown-menu dropdown-menu-small dropdown-menu-end">
+            <li><a class="dropdown-item" href="{{ url_for('edit_task', task_id=task.id) }}">Edit</a></li>
+            <li>
                 <form method="POST" action="{{ url_for('delete_task', task_id=task.id) }}"
                       onsubmit="return confirm('Delete this task?');" class="m-0">
-                  <button type="submit" class="dropdown-item text-danger"
-                          style="border:none; background:none; width:100%; text-align:left; padding:0.25rem 1rem;">
-                    Delete
-                  </button>
+                    <button type="submit" class="dropdown-item text-danger"
+                            style="border:none; background:none; width:100%; text-align:left; padding:0.25rem 1rem;">
+                        Delete
+                    </button>
                 </form>
-              </li>
-            </ul>
-          </div>
-        </div>
- 
+            </li>
+        </ul>
+    </div>
+</div>
+</div>
         <div class="task-actions mt-2">
           {% if not task.is_complete %}
           
@@ -255,9 +259,13 @@
             data-task-priority="{{ task.priority }}">
             Start focus ({{ task.estimate_mins or 25 }}m)
           </button>
-          <form method="POST" action="{{ url_for('complete_task', task_id=task.id) }}" class="d-inline">
-            <button type="submit" class="btn-icon-ghost">✓ Mark Done</button>
+
+          <form method="POST" action="{{ url_for('complete_task', task_id=task.id) }}" class="d-inline m-0">
+            <button type="submit" class="done-toggle-btn" aria-label="Mark task done">
+        <span class="done-checkbox"></span>
+        <span>Done</span></button>
           </form>
+
           {% else %}
           <span class="badge bg-success">Completed</span>
           {% endif %}
@@ -269,6 +277,12 @@
   <p class="mt-4 text-muted">No tasks yet. Start by adding one.</p>
   {% endif %}
 </div>
+
+<div class="bottom-nav-mobile">
+    <a href="{{ url_for('dashboard') }}" class="bottom-nav-link active">Home</a>
+    <a href="{{ url_for('all_tasks') }}" class="bottom-nav-link">All Tasks</a>
+</div>
+
 {% include "_focus_overlay.html" %}
 {% endblock %}
 

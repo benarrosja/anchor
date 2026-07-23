@@ -4,20 +4,21 @@
 {% block content %}
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-3">
-            <h2 class="fw-bold mb-1">All tasks</h2>
-            <a href="{{ url_for('dashboard') }}" class="text-decoration-none">Back to dashboard</a>
+        <h2 class="fw-bold mb-1">All tasks</h2>
+        <a href="{{ url_for('dashboard') }}" class="text-decoration-none">Back to dashboard</a>
     </div>
-        
-        {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      {% for category, message in messages %}
-      <div class="alert alert-{{ category }} alert-dismissible fade show py-2 px-3 mt-2" role="alert">
-        {{ message }}
-        <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert"></button>
-      </div>
-      {% endfor %}
-    {% endif %}
-  {% endwith %}
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show py-2 px-3 mt-2" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
     {% macro task_card(task, allow_actions=true) %}
         {% if task.priority == 3 %}
             {% set priority_class = 'priority-high' %}
@@ -33,88 +34,107 @@
         <div class="task-card {{ priority_class }} {% if task.is_complete %}opacity-50{% endif %}">
             <div class="d-flex justify-content-between align-items-start">
                 <div>
-                    <div class="task-title {% if task.is_complete %}text-decoration-line-through{% endif %}">
-                        {% if task.pinned_to_top %}<span title="Pinned to Top 3">Pinned</span>{% endif %}
-                        {{ task.title }}
+                    <div class="task-title d-flex align-items-center gap-2 {% if task.is_complete %}text-decoration-line-through{% endif %}">
+                        {% if task.pinned_to_top %}
+                        <span class="pin-badge" title="Pinned task">📌</span>
+                        {% endif %}
+                        <span>{{ task.title }}</span>
                     </div>
+
                     <div class="task-meta">
                         {{ priority_label }}
                         {% if task.deadline %} - Due {{ task.deadline }}{% endif %}
                         - {{ task.estimate_mins or 25 }} min
                     </div>
                 </div>
-                <div class="dropdown">
-                    <button class="btn-icon-ghost" data-bs-toggle="dropdown">More</button>
-                    <ul class="dropdown-menu dropdown-menu-small dropdown-menu-end">
-                        <li><a class="dropdown-item" href="{{ url_for('edit_task', task_id=task.id) }}">Edit</a></li>
-                        <li>   
-                            <form method="POST" action="{{ url_for('delete_task', task_id=task.id) }}"
-                            onsubmit="return confirm('Delete this task?');" class="m-0">
-                                <button type="submit" class="dropdown-item text-danger" style="border:none; 
-                                background:none; width:100%; text-align:left; padding:0.25rem 1rem;">
-                                Delete
-                                </button>
-                            </form>
-                        </li>
-                    </ul>
+
+                <div class="d-flex align-items-center gap-2">
+                    <form method="POST" action="{{ url_for('toggle_pin', task_id=task.id) }}" class="d-inline m-0">
+                        <button
+                            type="submit"
+                            class="pin-toggle-btn {% if task.pinned_to_top %}is-pinned{% endif %}"
+                            title="{% if task.pinned_to_top %}Unpin task{% else %}Pin task{% endif %}"
+                            aria-label="{% if task.pinned_to_top %}Unpin task{% else %}Pin task{% endif %}">
+                            📌
+                        </button>
+                    </form>
+
+                    <div class="dropdown">
+                        <button class="btn-icon-ghost" data-bs-toggle="dropdown">More</button>
+                        <ul class="dropdown-menu dropdown-menu-small dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('edit_task', task_id=task.id) }}">Edit</a>
+                            </li>
+                            <li>
+                                <form method="POST"
+                                      action="{{ url_for('delete_task', task_id=task.id) }}"
+                                      onsubmit="return confirm('Delete this task?');"
+                                      class="m-0">
+                                    <button type="submit"
+                                            class="dropdown-item text-danger"
+                                            style="border:none; background:none; width:100%; text-align:left; padding:0.25rem 1rem;">
+                                        Delete
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
 
             <div class="task-actions mt-2">
                 {% if not task.is_complete and allow_actions %}
-            <button class="btn-primary-action start-focus-btn"
-                data-task-id="{{ task.id }}"
-                data-task-title="{{ task.title }}"
-                data-task-details="{{ task.details or '' }}"
-                data-estimate-mins="{{ task.estimate_mins or 25 }}"
-                data-task-deadline="{{ task.deadline or '' }}"
-                data-task-priority="{{ task.priority }}">
-                Start focus ({{ task.estimate_mins or 25 }}m)
-            </button>
+                <button class="btn-primary-action start-focus-btn"
+                    data-task-id="{{ task.id }}"
+                    data-task-title="{{ task.title }}"
+                    data-task-details="{{ task.details or '' }}"
+                    data-estimate-mins="{{ task.estimate_mins or 25 }}"
+                    data-task-deadline="{{ task.deadline or '' }}"
+                    data-task-priority="{{ task.priority }}">
+                    Start focus ({{ task.estimate_mins or 25 }}m)
+                </button>
 
-        <form method="POST" action="{{ url_for('complete_task', task_id=task.id) }}" class="d-inline">
-        <button type="submit" class="btn-icon-ghost">Mark Done</button>
-        </form>
-
-        <form method="POST" action="{{ url_for('toggle_pin', task_id=task.id) }}" class="d-inline">
-          {% if task.pinned_to_top %}
-          <button type="submit" class="btn-icon-ghost">Remove from Top 3</button>
-          {% else %}
-          <button type="submit" class="btn-icon-ghost">📌</button>
-          {% endif %}
-        </form>
-        {% elif task.is_complete %}   
-        <span class="badge bg-success">Completed</span>
-        {% endif %}
-        </div>
+                <form method="POST" action="{{ url_for('complete_task', task_id=task.id) }}" class="d-inline m-0">
+                    <button type="submit" class="done-toggle-btn" aria-label="Mark task done">
+                        <span class="done-checkbox"></span>
+                        <span>Done</span>
+                    </button>
+                </form>
+                {% elif task.is_complete %}
+                <span class="badge bg-success">Completed</span>
+                {% endif %}
+            </div>
         </div>
     {% endmacro %}
-      <h5 class="fw-bold mt-4 mb-2">Overdue</h5>
+
+    <h5 class="fw-bold mt-4 mb-2">Overdue</h5>
     {% if overdue_tasks %}
         {% for task in overdue_tasks %}{{ task_card(task) }}{% endfor %}
     {% else %}
-    <p class="text-muted">Nothing overdue - nice work.</p>
-  {% endif %}
-      <h5 class="fw-bold mt-4 mb-2">Due soon (next 7 days)</h5>
-  {% if due_soon_tasks %}
-    {% for task in due_soon_tasks %}{{ task_card(task) }}{% endfor %}
-{% else %}
-    <p class="text-muted">Nothing due soon.</p>
-  {% endif %}
+        <p class="text-muted">Nothing overdue - nice work.</p>
+    {% endif %}
 
-  <h5 class="fw-bold mt-4 mb-2">Later / no deadline</h5>
-  {% if later_tasks %}
-    {% for task in later_tasks %}{{ task_card(task) }}{% endfor %}
-  {% else %}
-    <p class="text-muted">Nothing else on your list.</p>
-  {% endif %}
+    <h5 class="fw-bold mt-4 mb-2">Due soon (next 7 days)</h5>
+    {% if due_soon_tasks %}
+        {% for task in due_soon_tasks %}{{ task_card(task) }}{% endfor %}
+    {% else %}
+        <p class="text-muted">Nothing due soon.</p>
+    {% endif %}
 
-  <h5 class="fw-bold mt-4 mb-2">Completed</h5>
-  {% if completed_tasks %}
-    {% for task in completed_tasks %}{{ task_card(task, allow_actions=false) }}{% endfor %}
-  {% else %}
-    <p class="text-muted">No completed tasks yet.</p>
-  {% endif %}
+    <h5 class="fw-bold mt-4 mb-2">Later / no deadline</h5>
+    {% if later_tasks %}
+        {% for task in later_tasks %}{{ task_card(task) }}{% endfor %}
+    {% else %}
+        <p class="text-muted">Nothing else on your list.</p>
+    {% endif %}
+
+    <h5 class="fw-bold mt-4 mb-2">Completed</h5>
+    {% if completed_tasks %}
+        {% for task in completed_tasks %}{{ task_card(task, allow_actions=false) }}{% endfor %}
+    {% else %}
+        <p class="text-muted">No completed tasks yet.</p>
+    {% endif %}
 </div>
+
 {% include "_focus_overlay.html" %}
 {% endblock %}

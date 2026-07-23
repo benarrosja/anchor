@@ -139,4 +139,131 @@
 .fo-subtask-done { text-decoration: line-through; color: #9ca3af; transition: all 0.25s ease; }
 #breakdown-box { display: none; border-radius: 14px; background: #eef3fb; max-width: 520px; margin: 24px auto 0; }
  
+.pin-badge {
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.pin-toggle-btn {
+  border: 1px solid #d6d9e3;
+  background: #ffffff;
+  color: #9aa3b2;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 0.95rem;
+  line-height: 1;
+  transition: all 0.18s ease;
+}
+
+.pin-toggle-btn:hover {
+  border-color: #c7ccd8;
+  background: #f7f8fc;
+}
+
+.pin-toggle-btn.is-pinned {
+  color: #d62828;
+  border-color: #f1b5b5;
+  background: #fff1f1;
+}
+
+.done-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #d6d9e3;
+  background: #ffffff;
+  color: #374151;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  transition: all 0.18s ease;
+}
+
+.done-toggle-btn:hover {
+  background: #f8fafc;
+}
+
+.done-checkbox {
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  border: 2px solid #98a2b3;
+  display: inline-block;
+  background: #fff;
+}
+
+.dashboard-summary {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.summary-pill {
+  background: #ffffff;
+  border: 1px solid #eceef5;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  border-radius: 14px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  min-width: 110px;
+}
+
+.summary-quote {
+  flex: 1 1 220px;
+}
+
+.summary-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #6b7280;
+}
+
+.summary-value {
+  font-size: 0.95rem;
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.bottom-nav-mobile {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255,255,255,0.96);
+  border-top: 1px solid #e5e7eb;
+  display: none;
+  justify-content: space-around;
+  align-items: center;
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+  z-index: 1050;
+  backdrop-filter: blur(10px);
+}
+
+.bottom-nav-link {
+  text-decoration: none;
+  color: #6b7280;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 10px 16px;
+  border-radius: 999px;
+}
+
+.bottom-nav-link.active {
+  background: #111827;
+  color: #ffffff;
+}
+
+@media (max-width: 768px) {
+  .bottom-nav-mobile {
+    display: flex;
+  }
+
+  .page-shell {
+    padding-bottom: 96px;
+  }
+}
+
+
 Task_form.js
